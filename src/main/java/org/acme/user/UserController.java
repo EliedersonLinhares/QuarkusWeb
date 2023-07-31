@@ -11,9 +11,12 @@ import jakarta.ws.rs.core.Response;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 @Path("/user")
+
 public class UserController {
 
     @Inject
@@ -32,10 +35,33 @@ public class UserController {
             @QueryParam("size")@DefaultValue("5") int size,
             @QueryParam("page") @DefaultValue("0") int page,
             @QueryParam("sort")@DefaultValue("id") String sort,
-            @QueryParam("order")@DefaultValue("Ascending") String order){
-        //Descending
+            @QueryParam("order")@DefaultValue("Ascending") String order,
+            @QueryParam("firstname") String firstName,
+            @QueryParam("lastname") String lastName){
+        //Order can be Ascending or Descending
         PanacheQuery<UserModel> users = userRepository.findAll(Sort.by(sort).direction(Sort.Direction.valueOf(order)));
         users.page( Page.of(page,size));
+
+        if(Stream.of(firstName,lastName).allMatch(Objects::nonNull)) {
+        List<UserModel> filteredUser =  users.stream()
+                    .filter(e -> e.getFirstName().toUpperCase().contains(firstName.toUpperCase()))
+                    .filter(e -> e.getLastName().toUpperCase().contains(lastName.toUpperCase()))
+                    .toList();
+            return Response.ok(filteredUser).build();
+        }
+        if(Objects.nonNull(firstName)){
+            List<UserModel> filteredUser =  users.stream()
+                    .filter(e -> e.getFirstName().toUpperCase().contains(firstName.toUpperCase()))
+                    .toList();
+            return Response.ok(filteredUser).build();
+        }
+        if(Objects.nonNull(lastName)){
+            List<UserModel> filteredUser =  users.stream()
+                    .filter(e -> e.getLastName().toUpperCase().contains(lastName.toUpperCase()))
+                    .toList();
+            return Response.ok(filteredUser).build();
+        }
+
         return Response.ok(users.stream().toList()).build();
     }
     @GET
