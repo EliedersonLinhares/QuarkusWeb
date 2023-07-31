@@ -1,5 +1,8 @@
 package org.acme.user;
 
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
+import io.quarkus.panache.common.Page;
+import io.quarkus.panache.common.Sort;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
@@ -22,6 +25,31 @@ public class UserController {
         List<UserModel> users = userRepository.listAll();
         return Response.ok(users).build();
     }
+    @GET
+    @Path("/userpaginated")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getAllUsersPaginated(
+            @QueryParam("size")@DefaultValue("5") int size,
+            @QueryParam("page") @DefaultValue("0") int page,
+            @QueryParam("sort")@DefaultValue("id") String sort,
+            @QueryParam("order")@DefaultValue("Ascending") String order){
+        //Descending
+        PanacheQuery<UserModel> users = userRepository.findAll(Sort.by(sort).direction(Sort.Direction.valueOf(order)));
+        users.page( Page.of(page,size));
+        return Response.ok(users.stream().toList()).build();
+    }
+    @GET
+    @Path("/gender/{gender}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getUserByGender(@PathParam("gender") String gender){
+
+        List<UserModel> users = userRepository.list("gender",gender);
+        if(users.isEmpty()){
+            return Response.ok("nenhum usuário encontrado").build();
+        }
+        return Response.ok(users).build();
+    }
+
 
     @POST
     @Transactional
