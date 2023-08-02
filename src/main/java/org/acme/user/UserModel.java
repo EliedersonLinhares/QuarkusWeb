@@ -1,12 +1,21 @@
 package org.acme.user;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
+import io.quarkus.panache.common.Sort;
+import jakarta.inject.Inject;
+import jakarta.persistence.*;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
 
 @Entity
+@FilterDef(name = "firstNameFilter",
+        defaultCondition = "firstName = :firstName",
+       parameters = @ParamDef(name = "firstName",type = String.class))
+@Filter(name = "firstNameFilter")
+//@NamedQuery(name = "UserModel.getByFirstName", query = "SELECT DISTINCT firstName FROM UserModel WHERE UPPER(firstName) LIKE UPPER('%firstName%')")
 public class UserModel {
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -47,4 +56,6 @@ public class UserModel {
     public void setGender(String gender) {
         this.gender = gender;
     }
+
+
 }
