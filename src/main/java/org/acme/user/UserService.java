@@ -8,7 +8,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -21,9 +20,7 @@ public class UserService {
     public UserModel getUserById(long id){
         return userRepository.findById(id);
     }
-    public List<UserModel> getAllUsers(){
-       return userRepository.listAll();
-    }
+
     public String saveUser(UserModel user){
          userRepository.persist(user);
         if(userRepository.isPersistent(user)){

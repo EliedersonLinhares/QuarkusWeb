@@ -17,12 +17,6 @@ public class UserController {
     UserService userService;
 
     @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getAllUsers(){
-        List<UserModel> users = userService.getAllUsers();
-        return Response.ok(users).build();
-    }
-    @GET
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getUserById(@PathParam("id") Long id){
