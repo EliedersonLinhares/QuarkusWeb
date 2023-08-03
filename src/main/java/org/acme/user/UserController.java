@@ -24,7 +24,7 @@ public class UserController {
         if(Objects.nonNull(user)) {
             return Response.ok(user).build();
         }
-        return Response.ok("vazio").build();
+        return Response.noContent().build();
 
     }
     @GET
@@ -83,7 +83,7 @@ public class UserController {
     }
 
     @DELETE
-    @Path("/{id}/")
+    @Path("/{id}")
     @Transactional
     @Produces(MediaType.APPLICATION_JSON)
     public Response deleteUser(@PathParam("id") Long id){
