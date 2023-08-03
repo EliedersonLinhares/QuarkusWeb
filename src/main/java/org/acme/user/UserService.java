@@ -66,13 +66,13 @@ public class UserService {
         return  getPaginatedResponse(userRepository.find(
                 "lower(firstName) like :firstName",
                 sortOrder(sort,order),
-                Parameters.with("firstName", firstName.toLowerCase() + "%")), page, size);
+                Parameters.with("firstName", "%" +firstName.toLowerCase() + "%")), page, size);
     }
     public Object findBylastName(String sort,String order,int page,int size,String lastName){
         return   getPaginatedResponse(userRepository.find(
                 "lower(lastName) like :lastName",
                 sortOrder(sort,order),
-                Parameters.with("lastName", lastName.toLowerCase() + "%")), page, size);
+                Parameters.with("lastName", "%" +lastName.toLowerCase() + "%")), page, size);
     }
     public Object findByfirstNameAndlastName(String sort,String order,int page,int size,String firstName,String lastName){
         return  getPaginatedResponse(userRepository.find(
