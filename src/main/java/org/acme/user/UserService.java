@@ -78,8 +78,8 @@ public class UserService {
         return  getPaginatedResponse(userRepository.find(
                 "lower(firstName) like :firstName and lower(lastName) like :lastName",
                 sortOrder(sort,order),
-                Parameters.with("firstName", firstName.toLowerCase() + "%")
-                        .and("lastName", lastName.toLowerCase() + "%")
+                Parameters.with("firstName", "%" +firstName.toLowerCase() + "%")
+                        .and("lastName", "%" +lastName.toLowerCase() + "%")
         ), page, size);
     }
     private Sort sortOrder(String sort, String order){

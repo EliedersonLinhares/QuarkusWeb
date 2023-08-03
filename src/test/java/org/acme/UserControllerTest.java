@@ -221,8 +221,21 @@ class UserControllerTest {
         Assertions.assertTrue(ArrayItems.contains("Ramalho"));
 
     }
-
     @Order(11)
+    @Test
+    void userPaginatedQueryFilterLastNameAndLastNameByPartialStringIgnoreCase(){
+        String json = RestAssured.given()
+                .queryParam("firstname","m")
+                .queryParam("lastname","o")
+                .when()
+                .get("user/userpaginated")
+                .asString();
+        String ArrayItems = JsonPath.read(json, "$..lastName").toString();
+        Assertions.assertTrue(ArrayItems.contains("Ramos"));
+
+    }
+
+    @Order(12)
     @Test
     void updateUser(){
         JsonObject user = new JsonObject();
@@ -249,7 +262,7 @@ class UserControllerTest {
                 .body("gender", equalTo("masculino2"))
                 .statusCode(Response.Status.OK.getStatusCode());
     }
-    @Order(12)
+    @Order(13)
    @Test
     void deleteUserById(){
         RestAssured.given()
