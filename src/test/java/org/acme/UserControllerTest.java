@@ -17,6 +17,7 @@ import static org.hamcrest.CoreMatchers.*;
 class UserControllerTest {
 
     @Order(1)
+    @DisplayName("[POST] Save User")
     @Test
     void addUser(){
 
@@ -36,6 +37,7 @@ class UserControllerTest {
                 .statusCode(Response.Status.CREATED.getStatusCode());
     }
     @Order(2)
+    @DisplayName("[GET] Get User by id")
     @Test
     void getUserById(){
         RestAssured.given()
@@ -49,6 +51,7 @@ class UserControllerTest {
                 .statusCode(Response.Status.OK.getStatusCode());
     }
     @Order(3)
+    @DisplayName("[GET] Get All Users paginated")
     @Test
     void getUsersPaginate(){
         JsonObject user2 = new JsonObject();
@@ -130,6 +133,7 @@ class UserControllerTest {
                 .statusCode(Response.Status.OK.getStatusCode());
     }
     @Order(5)
+    @DisplayName("[GET] Get All Users paginated with page size changed to 10 ")
     @Test
     void userPaginatedQueryPageSizeChanged(){
         RestAssured.given()
@@ -143,6 +147,7 @@ class UserControllerTest {
                 .statusCode(Response.Status.OK.getStatusCode());
     }
     @Order(6)
+    @DisplayName("[GET] Get All Users paginated with actual page changed to second")
     @Test
     void userPaginatedQueryActualPageChanged(){
         RestAssured.given()
@@ -156,6 +161,7 @@ class UserControllerTest {
                 .statusCode(Response.Status.OK.getStatusCode());
     }
     @Order(7)
+    @DisplayName("[GET] Get All Users paginated with sorted changed by firstName")
     @Test
     void userPaginatedQuerySortChanged(){
      String json =   RestAssured.given()
@@ -176,7 +182,9 @@ class UserControllerTest {
         Assertions.assertTrue(firstArrayItem.contains("Alexandre"));
 
     }
+
     @Order(8)
+    @DisplayName("[GET] Get All Users paginated with order changed to descending")
     @Test
     void userPaginatedQueryOrderChanged(){
         String json =   RestAssured.given()
@@ -191,6 +199,7 @@ class UserControllerTest {
 
     }
     @Order(9)
+    @DisplayName("[GET] Get All Users paginated and filtered by firstName with letter 'm'")
     @Test
     void userPaginatedQueryFilterFirstNameByPartialStringIgnoreCase(){
         String json =   RestAssured.given()
@@ -206,6 +215,7 @@ class UserControllerTest {
        Assertions.assertTrue(ArrayItem.contains("Michele"));
     }
     @Order(10)
+    @DisplayName("[GET] Get All Users paginated and filtered by lastName with letter 'o'")
     @Test
     void userPaginatedQueryFilterLastNameByPartialStringIgnoreCase(){
         String json = RestAssured.given()
@@ -222,6 +232,7 @@ class UserControllerTest {
 
     }
     @Order(11)
+    @DisplayName("[GET] Get All Users paginated and filtered by firstName with letter 'm' and lastName 'o'")
     @Test
     void userPaginatedQueryFilterLastNameAndLastNameByPartialStringIgnoreCase(){
         String json = RestAssured.given()
@@ -236,6 +247,7 @@ class UserControllerTest {
     }
 
     @Order(12)
+    @DisplayName("[PUT] Update User")
     @Test
     void updateUser(){
         JsonObject user = new JsonObject();
@@ -263,6 +275,7 @@ class UserControllerTest {
                 .statusCode(Response.Status.OK.getStatusCode());
     }
     @Order(13)
+    @DisplayName("[DELETE] delete user by id")
    @Test
     void deleteUserById(){
         RestAssured.given()

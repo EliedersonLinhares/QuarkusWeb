@@ -12,6 +12,16 @@ public class UserModel {
     String email;
     String gender;
 
+    public UserModel() {
+    }
+
+    public UserModel(String firstName, String lastName, String email, String gender) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.gender = gender;
+    }
+
     public String getFirstName() {
         return firstName;
     }
@@ -43,6 +53,5 @@ public class UserModel {
     public void setGender(String gender) {
         this.gender = gender;
     }
-
 
 }

@@ -7,14 +7,14 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import java.net.URI;
-import java.util.*;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 @Path("/user")
 public class UserController {
 
-    @Inject
-    UserService userService;
+  @Inject
+  UserService userService;
 
     @GET
     @Path("/{id}")
@@ -72,7 +72,6 @@ public class UserController {
 
     @PUT
     @Path("/{id}")
-    @Transactional
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response updateUser(@PathParam("id") Long id, UserModel user){
@@ -84,7 +83,6 @@ public class UserController {
 
     @DELETE
     @Path("/{id}")
-    @Transactional
     @Produces(MediaType.APPLICATION_JSON)
     public Response deleteUser(@PathParam("id") Long id){
        if(userService.deleteUser(id)){
