@@ -1,24 +1,27 @@
 package org.acme.user;
 
-import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import lombok.RequiredArgsConstructor;
+import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 
 import java.net.URI;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+
 @Path("/user")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+@RequiredArgsConstructor
 public class UserController {
 
-  @Inject
-  UserService userService;
+  private final UserService userService;
 
     @GET
     @Path("/{id}")
-    @Produces(MediaType.APPLICATION_JSON)
     public Response getUserById(@PathParam("id") Long id){
         UserModel user = userService.getUserById(id);
         if(Objects.nonNull(user)) {
@@ -29,7 +32,6 @@ public class UserController {
     }
     @GET
     @Path("/userpaginated")
-    @Produces(MediaType.APPLICATION_JSON)
     public Response getAllUsersPaginated(
             @QueryParam("size")@DefaultValue("5") int size,
             @QueryParam("page") @DefaultValue("0") int page,
@@ -58,12 +60,10 @@ public class UserController {
 
     @POST
     @Transactional
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    public Response saveUser(UserModel user){
-        userService.saveUser(user);
-        if(userService.saveUser(user).contains("saved")){
-            return Response.created(URI.create("/user/" + user.id)).build();
+    public Response saveUser(@RequestBody UserDto user){
+       String response = userService.save2User(user);
+        if(response.contains("saved")){
+            return Response.created(URI.create("/user/" + user.id())).build();
         }
         else{
             return Response.status(Response.Status.BAD_REQUEST).build();
@@ -71,19 +71,18 @@ public class UserController {
     }
 
     @PUT
+    @Transactional
     @Path("/{id}")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response updateUser(@PathParam("id") Long id, UserModel user){
-            if(userService.updateUser(user,id).contains("updated")){
-                return  Response.ok().build();
-            }
-            return  Response.status((Response.Status.BAD_REQUEST)).build();
+    public Response updateUser(@PathParam("id") Long id, @RequestBody UserDto userDto){
+            String response = userService.update2User(userDto,id);
+             if(response.contains("updated")){
+                 return  Response.ok().build();
+             }
+          return Response.status(Response.Status.BAD_REQUEST).build();
     }
 
     @DELETE
     @Path("/{id}")
-    @Produces(MediaType.APPLICATION_JSON)
     public Response deleteUser(@PathParam("id") Long id){
        if(userService.deleteUser(id)){
            return Response.noContent().build();

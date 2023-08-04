@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
+import org.acme.user.UserMapper;
 import org.acme.user.UserModel;
 import org.acme.user.UserService;
 import org.junit.jupiter.api.*;
@@ -22,6 +23,9 @@ class UserServiceTest {
 
     UserModel userModel;
 
+    @Inject
+    UserMapper userMapper;
+
     @BeforeAll
     void setUp() {
         UserModel userModel2 = new UserModel();
@@ -29,13 +33,13 @@ class UserServiceTest {
         userModel2.setLastName("Abrantes");
         userModel2.setEmail("marcia.abrantes@mail.com");
         userModel2.setGender("feminino");
-        userService.saveUser(userModel2);
+        userService.save2User(userMapper.toUserDto(userModel2));
         UserModel userModel3 = new UserModel();
         userModel3.setFirstName("Roberto");
         userModel3.setLastName("Nascimento");
         userModel3.setEmail("roberto.nascimento@mail.com");
         userModel3.setGender("masculino");
-        userService.saveUser(userModel3);
+        userService.save2User(userMapper.toUserDto(userModel3));
 
     }
 
@@ -51,7 +55,7 @@ class UserServiceTest {
         userModel1.setGender("masculino");
 
         //when
-        String response = userService.saveUser(userModel1);
+        String response = userService.save2User(userMapper.toUserDto(userModel1));
 
         //then
         System.out.println(response);
@@ -187,8 +191,10 @@ class UserServiceTest {
         userEdit.setLastName("Abrantes2");
         userEdit.setEmail("marcia2.abrantes@mail.com");
         userEdit.setGender("feminino2");
+
+
         //when
-       String response = userService.updateUser(userEdit, 1L);
+       String response = userService.update2User(userMapper.toUserDto(userEdit), 1L);
         userModel = userService.getUserById(1L);
        //then
         assertTrue(response.contains("updated"));
@@ -198,13 +204,16 @@ class UserServiceTest {
         assertTrue(userModel.getGender().contains("feminino2"));
 
     }
+
+
+
     @Order(9)
     @DisplayName("Delete USer")
     @Test
     void deleteUserTest() {
 
         //when
-        Boolean result = userService.deleteUser(1L);
+        boolean result = userService.deleteUser(1L);
         UserModel user = userService.getUserById(1L);
 
         //then

@@ -5,42 +5,38 @@ import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
 @ApplicationScoped
+@RequiredArgsConstructor
 public class UserService {
 
-    @Inject
-    UserRepository userRepository;
+
+    private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
     public UserModel getUserById(long id) {
         return userRepository.findById(id);
     }
 
     @Transactional
-    public String saveUser(UserModel user) {
-        userRepository.persist(user);
-        if (userRepository.isPersistent(user)) {
-            return "saved";
-        }
-        return "error";
+    public String save2User(UserDto user) {
+        userRepository.persist(userMapper.toUserModel(user));
+        return "saved";
     }
+
     @Transactional
-    public String updateUser(UserModel user, long id) {
+    public String update2User(UserDto user, long id) {
         Optional<UserModel> optionalUserModel = userRepository.findByIdOptional(id);
         if (optionalUserModel.isPresent()) {
-            UserModel updateUser = optionalUserModel.get();
-            updateUser.setFirstName(user.getFirstName());
-            updateUser.setLastName(user.getLastName());
-            updateUser.setEmail(user.getEmail());
-            updateUser.setGender(user.getGender());
-            userRepository.persist(updateUser);
-            return "updated";
+          userMapper.updateUser(user,optionalUserModel.get());
+          userRepository.persist(optionalUserModel.get());
+          return "updated";
         }
 
         return "error";

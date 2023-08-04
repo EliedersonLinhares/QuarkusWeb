@@ -209,8 +209,7 @@ class UserControllerTest {
                 .asString();
 
         String ArrayItem = JsonPath.read(json, "$..firstName").toString();
-       // System.out.println("-----firstArrayItem---");
-       // System.out.println(ArrayItem);
+
         Assertions.assertTrue(ArrayItem.contains("Myke"));
        Assertions.assertTrue(ArrayItem.contains("Michele"));
     }
@@ -225,8 +224,7 @@ class UserControllerTest {
                 .asString();
 
         String ArrayItems = JsonPath.read(json, "$..lastName").toString();
-      //  System.out.println("-----firstArrayItem---");
-       // System.out.println(ArrayItems);
+
         Assertions.assertTrue(ArrayItems.contains("Ramos"));
         Assertions.assertTrue(ArrayItems.contains("Ramalho"));
 
