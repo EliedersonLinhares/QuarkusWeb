@@ -285,7 +285,7 @@ class UserControllerTest {
                 .when()
                 .get("user/1")
                 .then()
-                .statusCode(Response.Status.NO_CONTENT.getStatusCode());
+                .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
     }
 
 }

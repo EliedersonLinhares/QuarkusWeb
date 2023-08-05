@@ -1,6 +1,7 @@
 package org.acme.user;
 
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -24,11 +25,7 @@ public class UserController {
     @Path("/{id}")
     public Response getUserById(@PathParam("id") Long id){
         UserModel user = userService.getUserById(id);
-        if(Objects.nonNull(user)) {
-            return Response.ok(user).build();
-        }
-        return Response.noContent().build();
-
+        return Response.ok(user).build();
     }
     @GET
     @Path("/userpaginated")
@@ -60,36 +57,27 @@ public class UserController {
 
     @POST
     @Transactional
-    public Response saveUser(@RequestBody UserDto user){
-       String response = userService.save2User(user);
-        if(response.contains("saved")){
-            return Response.created(URI.create("/user/" + user.id())).build();
-        }
-        else{
-            return Response.status(Response.Status.BAD_REQUEST).build();
-        }
+    public Response saveUser(@Valid @RequestBody UserDto user){
+      userService.save2User(user);
+     return Response.created(URI.create("/user/" + user.id())).build();
+
     }
 
     @PUT
     @Transactional
     @Path("/{id}")
-    public Response updateUser(@PathParam("id") Long id, @RequestBody UserDto userDto){
-            String response = userService.update2User(userDto,id);
-             if(response.contains("updated")){
-                 return  Response.ok().build();
-             }
-          return Response.status(Response.Status.BAD_REQUEST).build();
+    public Response updateUser(@Valid @PathParam("id") Long id, @RequestBody UserDto userDto){
+            userService.update2User(userDto,id);
+            return  Response.ok().build();
+
     }
 
     @DELETE
     @Path("/{id}")
     public Response deleteUser(@PathParam("id") Long id){
-       if(userService.deleteUser(id)){
-           return Response.noContent().build();
-       }
-       else{
-           return Response.status(Response.Status.BAD_REQUEST).build();
-       }
+       userService.deleteUser(id);
+       return Response.noContent().build();
+
     }
 
 }

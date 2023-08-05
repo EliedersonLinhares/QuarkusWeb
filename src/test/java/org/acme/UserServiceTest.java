@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
+import org.acme.exceptions.ObjectNotFoundException;
 import org.acme.user.UserMapper;
 import org.acme.user.UserModel;
 import org.acme.user.UserService;
@@ -54,12 +55,20 @@ class UserServiceTest {
         userModel1.setEmail("eduardo.brandao@mail.com");
         userModel1.setGender("masculino");
 
+
         //when
-        String response = userService.save2User(userMapper.toUserDto(userModel1));
+       userService.save2User(userMapper.toUserDto(userModel1));
+        userModel = userService.getUserById(3L);
+
 
         //then
-        System.out.println(response);
-        assertTrue(response.contains("saved"));
+        assertNotNull(userModel);
+        assertTrue(userModel.getFirstName().contains("Eduardo"));
+        assertTrue(userModel.getLastName().contains("brandão"));
+        assertTrue(userModel.getEmail().contains("eduardo.brandao@mail.com"));
+        assertTrue(userModel.getGender().contains("masculino"));
+
+
     }
     @Order(2)
     @DisplayName("Get All Users Sorted by id ASC")
@@ -194,10 +203,9 @@ class UserServiceTest {
 
 
         //when
-       String response = userService.update2User(userMapper.toUserDto(userEdit), 1L);
+       userService.update2User(userMapper.toUserDto(userEdit), 1L);
         userModel = userService.getUserById(1L);
        //then
-        assertTrue(response.contains("updated"));
         assertTrue(userModel.getFirstName().contains("Marcia2"));
         assertTrue(userModel.getLastName().contains("Abrantes2"));
         assertTrue(userModel.getEmail().contains("marcia2.abrantes@mail.com"));
@@ -205,20 +213,36 @@ class UserServiceTest {
 
     }
 
-
-
     @Order(9)
     @DisplayName("Delete USer")
     @Test
     void deleteUserTest() {
 
+        //given
+        userService.deleteUser(1L);
+
         //when
-        boolean result = userService.deleteUser(1L);
-        UserModel user = userService.getUserById(1L);
+        ObjectNotFoundException exception = assertThrows(ObjectNotFoundException.class, () -> userService.getUserById(1L));
+        String expectedMessage = "User not found";
+        String actualMessage = exception.getMessage();
 
         //then
-        assertTrue(result);
-        assertNull(user);
+        assertTrue(actualMessage.contains(expectedMessage));
+
+    }
+    @Order(10)
+    @DisplayName("Get User by id not found")
+    @Test
+    void getUserByIdThrowErrorTest() {
+
+
+        //when
+        ObjectNotFoundException exception = assertThrows(ObjectNotFoundException.class, () -> userService.getUserById(8L));
+        String expectedMessage = "User not found";
+        String actualMessage = exception.getMessage();
+
+        //then
+        assertTrue(actualMessage.contains(expectedMessage));
     }
 
 

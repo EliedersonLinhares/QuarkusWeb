@@ -7,10 +7,10 @@ import io.quarkus.panache.common.Sort;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.acme.exceptions.ObjectNotFoundException;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 @ApplicationScoped
 @RequiredArgsConstructor
@@ -20,31 +20,44 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
 
-    public UserModel getUserById(long id) {
-        return userRepository.findById(id);
+    public UserModel getUserById(long id){
+        return userRepository
+                .findByIdOptional(id)
+                .orElseThrow(() -> new ObjectNotFoundException("User not found"));
     }
 
     @Transactional
-    public String save2User(UserDto user) {
-        userRepository.persist(userMapper.toUserModel(user));
-        return "saved";
-    }
-
-    @Transactional
-    public String update2User(UserDto user, long id) {
-        Optional<UserModel> optionalUserModel = userRepository.findByIdOptional(id);
-        if (optionalUserModel.isPresent()) {
-          userMapper.updateUser(user,optionalUserModel.get());
-          userRepository.persist(optionalUserModel.get());
-          return "updated";
+    public void save2User(UserDto user) {
+        try {
+            userRepository.persist(userMapper.toUserModel(user));
+        }catch (RuntimeException e) {
+            throw new ObjectNotFoundException("Error saving user");
         }
 
-        return "error";
     }
 
     @Transactional
-    public boolean deleteUser(long id) {
-        return userRepository.deleteById(id);
+    public void update2User(UserDto user, long id) {
+          try {
+              UserModel userModel = getUserById(id);
+              userMapper.updateUser(user,userModel);
+              userRepository.persist(userModel);
+
+          }catch (RuntimeException e){
+              throw new ObjectNotFoundException("Error updating user");
+          }
+
+    }
+
+    @Transactional
+    public void deleteUser(long id) {
+        try{
+            UserModel userModel = getUserById(id);
+            userRepository.delete(userModel);
+        }catch (RuntimeException e){
+            throw new ObjectNotFoundException("Error deleting user");
+        }
+
     }
 
     public Map<String, Object> getPaginatedResponse(PanacheQuery<UserModel> userRepository, int page, int size) {
