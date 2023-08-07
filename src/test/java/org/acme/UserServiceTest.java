@@ -34,12 +34,14 @@ class UserServiceTest {
         userModel2.setLastName("Abrantes");
         userModel2.setEmail("marcia.abrantes@mail.com");
         userModel2.setGender("feminino");
+        userModel2.setPassword("123456");
         userService.save2User(userMapper.toUserDto(userModel2));
         UserModel userModel3 = new UserModel();
         userModel3.setFirstName("Roberto");
         userModel3.setLastName("Nascimento");
         userModel3.setEmail("roberto.nascimento@mail.com");
         userModel3.setGender("masculino");
+        userModel2.setPassword("123456");
         userService.save2User(userMapper.toUserDto(userModel3));
 
     }
@@ -54,6 +56,7 @@ class UserServiceTest {
         userModel1.setLastName("brandão");
         userModel1.setEmail("eduardo.brandao@mail.com");
         userModel1.setGender("masculino");
+        userModel1.setPassword("123456");
 
 
         //when
@@ -203,7 +206,7 @@ class UserServiceTest {
 
 
         //when
-       userService.update2User(userMapper.toUserDto(userEdit), 1L);
+       userService.update2User(userMapper.toUpdateUserDto(userEdit), 1L);
         userModel = userService.getUserById(1L);
        //then
         assertTrue(userModel.getFirstName().contains("Marcia2"));

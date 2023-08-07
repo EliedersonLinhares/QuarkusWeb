@@ -1,5 +1,7 @@
 package org.acme.user;
 
+import jakarta.annotation.security.PermitAll;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
@@ -9,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 
 import java.net.URI;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 
@@ -19,15 +22,36 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class UserController {
 
+
   private final UserService userService;
 
     @GET
+    @RolesAllowed({"admin","user"})
     @Path("/{id}")
     public Response getUserById(@PathParam("id") Long id){
+
         UserModel user = userService.getUserById(id);
         return Response.ok(user).build();
     }
     @GET
+    @Path("/login")
+    public Response loginByEmail(@RequestBody LoginDto loginDto){
+      Map<String,Object> response =  userService.authenticate(loginDto);
+
+        String cookieExpires = userService.getDateTimeInCookieFormat();
+        return Response.ok(response.get("user")).header("Set-Cookie", "jwt="+response.get("token")+ ";Expires="+cookieExpires+"; HttpOnly=true ").build();
+    }
+
+
+
+    @GET
+    @Path("/logout")
+    public Response logout(){
+        return Response.ok().header("Set-Cookie", "jwt=;Expires=;").build();
+    }
+
+    @GET
+   @RolesAllowed("admin")
     @Path("/userpaginated")
     public Response getAllUsersPaginated(
             @QueryParam("size")@DefaultValue("5") int size,
@@ -56,6 +80,7 @@ public class UserController {
     }
 
     @POST
+    @PermitAll
     @Transactional
     public Response saveUser(@Valid @RequestBody UserDto user){
       userService.save2User(user);
@@ -64,15 +89,35 @@ public class UserController {
     }
 
     @PUT
+    @RolesAllowed("user")
     @Transactional
     @Path("/{id}")
-    public Response updateUser(@Valid @PathParam("id") Long id, @RequestBody UserDto userDto){
+    public Response updateUser(@Valid @PathParam("id") Long id, @RequestBody UpdateUserDto userDto){
             userService.update2User(userDto,id);
             return  Response.ok().build();
 
     }
+    @PUT
+    @RolesAllowed("admin")
+    @Transactional
+    @Path("/roles/{id}")
+    public Response updateUserRole(@PathParam("id") Long id, @RequestBody UpdateUserRole userDto){
+
+        userService.updateUserRole(userDto,id);
+        return  Response.ok().build();
+    }
+    @PUT
+    @RolesAllowed({"user","admin"})
+    @Transactional
+    @Path("/password/{id}")
+    public Response updateUserPassword(@PathParam("id") Long id, @RequestBody UpdatePassword userDto){
+
+        userService.updateUserPassword(userDto,id);
+        return  Response.ok().build();
+    }
 
     @DELETE
+   @RolesAllowed("admin")
     @Path("/{id}")
     public Response deleteUser(@PathParam("id") Long id){
        userService.deleteUser(id);

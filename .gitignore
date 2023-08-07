@@ -41,3 +41,7 @@ nb-configuration.xml
 
 # Plugin directory
 /.quarkus/cli/plugins/
+
+#Keys
+/src/main/resources/privateKey.pem
+/src/main/resources/META-INF/resources/publicKey.pem
