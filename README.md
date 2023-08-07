@@ -8,8 +8,10 @@ using Quarkus and java
 
 - Java 17
 - Quarkus
-- PostgreSql
+- PostgreeSql
+- Panache 
 - Swagger
+- SmallRye JWT
 
 
 ## Features
@@ -18,16 +20,40 @@ using Quarkus and java
 
 <b>`Pagination`</b> -> Pagination system with sorting and filtering
 
+<b>`Security`</b> -> Security by Jwt save on cookies 
+
+<b>`Authorization`</b> -> All endpoints secure by roles
+
+
 ## Running the application in development mode
 
-Create one Database schema in PostGreSql with name defined in apllication.Properties
+Create one Database schema in PostGreSql with name defined in application.Properties
 
-For run the application use the comand in terminal:
+For run the application use the command in terminal:
 ```shell script
 ./mvnw compile quarkus:dev
 ```
+To use the application you need generate public and private key with
+openSSl with commands in terminal:
+```shell script
+openssl genrsa -out rsaPrivateKey.pem 2048
+openssl rsa -pubout -in rsaPrivateKey.pem -out publicKey.pem
+```
+and
+```shell script
+openssl pkcs8 -topk8 -nocrypt -inform pem -in rsaPrivateKey.pem -outform pem -out privateKey.pem
+```
+**_IMPORTANT:_** Now You can move the keys to places defined int application properties.
+I put the public on the /resources/META_INF/resources, and the
+private(Take care don't let this key public) in /resources folder
+.The rsaPrivateKey.pem you can delete.
+```
+mp.jwt.verify.publickey.location=META-INF/resources/publicKey.pem
+smallrye.jwt.sign.key.location=privateKey.pem
+```
 
-> **_NOTA:_** To access the UI of quarkus : http://localhost:8080/q/dev/.
+
+> **_NOTE:_** To access the UI of quarkus : http://localhost:8080/q/dev/.
 > 
 >To access the Swager: http://localhost:8080/q/swagger/
 
