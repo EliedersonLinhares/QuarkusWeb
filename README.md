@@ -55,5 +55,5 @@ smallrye.jwt.sign.key.location=privateKey.pem
 
 > **_NOTE:_** To access the UI of quarkus : http://localhost:8080/q/dev/.
 > 
->To access the Swager: http://localhost:8080/q/swagger/
+>To access the Swager: http://localhost:8080/q/swagger-ui/
 
