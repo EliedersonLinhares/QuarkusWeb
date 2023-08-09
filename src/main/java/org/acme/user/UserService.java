@@ -102,7 +102,7 @@ public class UserService {
               userMapper.updateUser(user,userModel);
               userRepository.persist(userModel);
         }catch (RuntimeException e){
-            throw new ObjectNotFoundException("Error deleting user");
+            throw new ObjectNotFoundException("Error updating user");
         }
 
     }
