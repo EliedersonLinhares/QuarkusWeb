@@ -59,7 +59,7 @@ class UserControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(user.toString())
                 .when()
-                .get("user/login")
+                .post("user/login")
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .body("id", equalTo(1))
@@ -80,7 +80,7 @@ class UserControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(user.toString())
                 .when()
-                .get("user/login")
+                .post("user/login")
                 .then()
                 .statusCode(Response.Status.BAD_REQUEST.getStatusCode())
                 .body("error",equalTo("Credentials invalid"))
@@ -98,7 +98,7 @@ class UserControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(user.toString())
                 .when()
-                .get("user/login")
+                .post("user/login")
                 .then()
                 .statusCode(Response.Status.BAD_REQUEST.getStatusCode())
                 .body("error",equalTo("User not found"))
@@ -474,7 +474,7 @@ class UserControllerTest {
                 .cookies(cookie)
                 .put("user/1")
                 .then()
-                .statusCode(Response.Status.OK.getStatusCode());;
+                .statusCode(Response.Status.OK.getStatusCode());
 
 
 
@@ -501,7 +501,7 @@ class UserControllerTest {
                 .get("user/999")
                 .then()
                 .statusCode(Response.Status.BAD_REQUEST.getStatusCode())
-                .body("error",equalTo("User not found"))
+                .body("error",equalTo("User can return only your data"))
                 .body("status",equalTo(400));
     }
     //@Disabled
@@ -535,7 +535,7 @@ class UserControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(user.toString())
                 .when()
-                .get("user/login")
+                .post("user/login")
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .body("id", equalTo(1))

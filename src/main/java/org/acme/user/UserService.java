@@ -31,12 +31,10 @@ public class UserService {
     private final SecurityUtils securityUtils;
 
     public UserModel getUserById(long id){
-        UserModel userModel = userRepository
+
+        return userRepository
                 .findByIdOptional(id)
                 .orElseThrow(() -> new ObjectNotFoundException("User not found"));
-        //For the user only retrieve your data, only admins can get all users by id
-        securityUtils.decodeJwtDataUserFromCookie(id);
-        return userModel;
     }
 
 
@@ -102,7 +100,7 @@ public class UserService {
               userMapper.updateUser(user,userModel);
               userRepository.persist(userModel);
         }catch (RuntimeException e){
-            throw new ObjectNotFoundException("Error updating user");
+            throw new ObjectNotFoundException("Error deleting user");
         }
 
     }

@@ -8,6 +8,7 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
+import org.acme.security.SecurityUtils;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
@@ -27,6 +28,7 @@ public class UserController {
 
 
   private final UserService userService;
+    private final SecurityUtils securityUtils;
 
     @GET
     @RolesAllowed({"admin","user"})
@@ -37,7 +39,7 @@ public class UserController {
     })
     @Operation( description = "Returns a user as per the id,role user only can return your own data, admin can return anyone")
     public Response getUserById(@PathParam("id") Long id){
-
+        securityUtils.decodeJwtDataUserFromCookie(id);
         UserModel user = userService.getUserById(id);
         return Response.ok(user).build();
     }
@@ -108,7 +110,8 @@ public class UserController {
     @Path("/{id}")
     @Operation(description = "Update basic data of the user, role user only can update your own data, admin can update any user data")
     public Response updateUser(@Valid @PathParam("id") Long id, @RequestBody UpdateUserDto userDto){
-            userService.update2User(userDto,id);
+        securityUtils.decodeJwtDataUserFromCookie(id);
+        userService.update2User(userDto,id);
             return  Response.ok().build();
 
     }
@@ -118,7 +121,7 @@ public class UserController {
     @Path("/roles/{id}")
     @Operation(description = "Update user status role, can be made only by admin")
     public Response updateUserRole(@PathParam("id") Long id, @RequestBody UpdateUserRole userDto){
-
+        securityUtils.decodeJwtDataUserFromCookie(id);
         userService.updateUserRole(userDto,id);
         return  Response.ok().build();
     }
@@ -128,7 +131,7 @@ public class UserController {
     @Path("/password/{id}")
     @Operation(description = "Update user password, role user can update your own password")
     public Response updateUserPassword(@PathParam("id") Long id, @RequestBody UpdatePassword userDto){
-
+        securityUtils.decodeJwtDataUserFromCookie(id);
         userService.updateUserPassword(userDto,id);
         return  Response.ok().build();
     }
@@ -138,7 +141,8 @@ public class UserController {
     @Path("/{id}")
     @Operation(description = "Delete a user from system")
     public Response deleteUser(@PathParam("id") Long id){
-       userService.deleteUser(id);
+        securityUtils.decodeJwtDataUserFromCookie(id);
+        userService.deleteUser(id);
        return Response.noContent().build();
 
     }
