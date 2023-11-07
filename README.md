@@ -3,34 +3,37 @@
 <img src="https://icongr.am/devicon/postgresql-original.svg?size=128&color=currentColor" alt="java" width="40" height="40"/>
 <img src="https://icon.icepanel.io/Technology/png-shadow-512/Quarkus.png" alt="java" width="40" height="40"/>
 
-It's a basic project to demonstrate how to make a web application
+Advanced project to demonstrate how to make a web application
 using Quarkus and java
 
-- Java 17
-- Quarkus
-- PostgreeSql
-- Panache 
-- Swagger
-- SmallRye JWT
+### Technologies
+
+- `Java 17` -> Program Language
+- `Quarkus` -> Ecosystem
+- `PostgreeSql` -> Database
+- `Panache` -> Hibernate SQL library
+- `Swagger` -> Customized docummentation
+- `SmallRye JWT` -> JWT token generation 
+- `MapStruct` ->  Mapping entities
 
 
-## Features
+### Features
 
-<b>`Crud operations`</b> -> Basic Crud operations like ADD,UPDATE and REMOVE
+<b>`Crud operations`⌨</b> -> Basic Crud operations like ADD,UPDATE and REMOVE
 
-<b>`Pagination`</b> -> Pagination system with sorting and filtering
+<b>`Pagination`📚</b> -> Pagination system with sorting and filtering
 
-<b>`Security`</b> -> Security by Jwt save on cookies 
+<b>`Security`🍪 </b> -> Security by Jwt save on cookies 
 
-<b>`Refresh Token`</b> -> Token refresh implemented
+<b>`Refresh Token`💦</b> -> Token refresh implemented
 
-<b>`Authorization`</b> -> All endpoints secure by roles
+<b>`Authorization`🔐</b> -> All endpoints secure by roles
 
-<b>`Tests`</b> -> Include tests for controller and service layers with Junit 5
+<b>`Tests`🧪</b> -> Include tests for controller and service layers with Junit 5
 and RestAssured
 
 
-## Running the application in development mode
+### Running the application in development mode
 
 Create one Database schema in PostGreSql with name defined in application.Properties
 
@@ -56,9 +59,16 @@ private(Take care don't let this key public) in /resources folder
 mp.jwt.verify.publickey.location=META-INF/resources/publicKey.pem
 smallrye.jwt.sign.key.location=privateKey.pem
 ```
+I create a file "StartupData" with contains a method to insert a
+admin level user, if you don't have any data in user table. The data of
+this user can be changed in application.properties
 
 
 > **_NOTE:_** To access the UI of quarkus : http://localhost:8080/q/dev/.
 > 
 >To access the Swager: http://localhost:8080/q/swagger-ui/
 
+### Future Development
+
+1. [ ] Email verification for register
+2. [ ] Email user for password change
