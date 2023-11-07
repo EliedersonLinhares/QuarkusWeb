@@ -16,7 +16,6 @@ public interface UserMapper {
 
     UpdateUserDto toUpdateUserDto(UserModel userModel);
 
-
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "email", ignore = true)
     @Mapping(target = "password", ignore = true)

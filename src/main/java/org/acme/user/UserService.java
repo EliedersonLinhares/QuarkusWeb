@@ -10,7 +10,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.acme.exceptions.ObjectNotFoundException;
 import org.acme.security.SecurityUtils;
-import org.acme.security.refreshtoken.RefreshTokenRepository;
 import org.acme.security.refreshtoken.RefreshTokenService;
 
 import java.time.Duration;
@@ -30,7 +29,6 @@ public class UserService {
     private final UserMapper userMapper;
     private final SecurityUtils securityUtils;
     private final RefreshTokenService refreshTokenService;
-    private final RefreshTokenRepository refreshTokenRepository;
 
     public UserModel getUserById(long id){
 
