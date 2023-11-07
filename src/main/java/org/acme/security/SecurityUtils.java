@@ -22,20 +22,52 @@ This class show two ways to get user details, from SecurityIdentity and from coo
  */
 @ApplicationScoped
 public class SecurityUtils {
-
-
-
     @Inject
     SecurityIdentity identity;
-//    public void getInformationFromIdentity(Long id){
-//        String principal = identity.getPrincipal().getName();
-//        String firstName = principal.substring(principal.indexOf("firstName",principal.indexOf("=")) +12,principal.indexOf(",",principal.indexOf(",")));
-//        System.out.println(" ----- "+ firstName);
-//        String userid = principal.substring(principal.indexOf("id",principal.indexOf("=")) +3,principal.indexOf(",",principal.indexOf(",")+1));
-//        System.out.println(" ----- "+ userid);
-//        String email = principal.substring(principal.indexOf("email",principal.indexOf("=")) +6,principal.indexOf("}",principal.indexOf("}")));
-//        System.out.println(" ----- "+ email);
-//    }
+
+
+  public void getInformationFromIdentity(){
+     String principal = identity.getPrincipal().getName();
+     String firstName = principal.substring(principal.indexOf("firstName",principal.indexOf("=")) +12,principal.indexOf(",",principal.indexOf(",")));
+       System.out.println(" ----- "+ firstName);
+     //  String userid = principal.substring(principal.indexOf("id",principal.indexOf("=")) +3,principal.indexOf(",",principal.indexOf(",")+1));
+      String userid = principal.substring(principal.indexOf("id",principal.indexOf("=")) +3,principal.indexOf("}",principal.indexOf("}")));
+       System.out.println(" ----- "+ userid);
+    //   String email = principal.substring(principal.indexOf("email",principal.indexOf("=")) +6,principal.indexOf("}",principal.indexOf("}")));
+      // System.out.println(" ----- "+ email);
+
+      System.out.println(" -----" + principal);
+    }
+
+    public Map<String, Object> userfromIdentity() {
+        String principal = identity.getPrincipal().getName();
+        String firstName = principal.substring(principal.indexOf("firstName",principal.indexOf("=")) +12,principal.indexOf(",",principal.indexOf(",")));
+
+        String userid = principal.substring(principal.indexOf("id",principal.indexOf("=")) +3,principal.indexOf("}",principal.indexOf("}")));
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("id", userid);
+        response.put("username", firstName);
+        return response;
+    }
+
+    public String getIDfromidentity(){
+        String principal = identity.getPrincipal().getName();
+        return principal.substring(principal.indexOf("id",principal.indexOf("=")) +3,principal.indexOf("}",principal.indexOf("}")));
+    }
+    public String getIdfromDecodedCookie(){
+      try {
+          HttpServerRequest request = ResteasyProviderFactory.getInstance().getContextData(HttpServerRequest.class);
+          String[] chunks = request.getCookie("jwt").getValue().split("\\.");
+          Base64.Decoder decoder = Base64.getUrlDecoder();
+          //System.out.println("-------" + decoder);
+          String payload = new String(decoder.decode(chunks[1]));
+
+          return payload.substring(payload.indexOf("id", payload.indexOf("=")) + 3, payload.indexOf("}", payload.indexOf("}")));
+      }catch (ArrayIndexOutOfBoundsException e){
+          throw new ObjectNotFoundException("Cookie inválido ou inexistente");
+      }
+      }
 
     public void decodeJwtDataUserFromCookie(long id) {
         HttpServerRequest request = ResteasyProviderFactory.getInstance().getContextData(HttpServerRequest.class);
@@ -66,12 +98,11 @@ public class SecurityUtils {
     public Map<String, Object> encryptJwt(PanacheQuery<UserModel> userByEmail, Set<String> roles2) {
         Map<String, Object> user = new HashMap<>();
         user.put("id", userByEmail.firstResult().getId());
-        user.put("firstName", userByEmail.firstResult().getFirstName());
-       // user.put("email", userByEmail.firstResult().getEmail());
+        user.put("firstName", userByEmail.firstResult().getUsername());
 
         String token = Jwt.upn(user.toString())
                 .groups(roles2)
-                .expiresIn(Duration.ofDays(7))
+                .expiresIn(Duration.ofMinutes(1))
                 .sign();
 
         Map<String, Object> response = new HashMap<>();

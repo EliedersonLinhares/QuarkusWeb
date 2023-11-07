@@ -30,19 +30,15 @@ class UserServiceTest {
     @BeforeAll
     void setUp() {
         UserModel userModel2 = new UserModel();
-        userModel2.setFirstName("Marcia");
-        userModel2.setLastName("Abrantes");
+        userModel2.setUsername("Marcia");
         userModel2.setEmail("marcia.abrantes@mail.com");
-        userModel2.setGender("feminino");
         userModel2.setPassword("123456");
         userService.save2User(userMapper.toUserDto(userModel2));
 
 
         UserModel userModel3 = new UserModel();
-        userModel3.setFirstName("Roberto");
-        userModel3.setLastName("Nascimento");
+        userModel3.setUsername("Roberto");
         userModel3.setEmail("roberto.nascimento@mail.com");
-        userModel3.setGender("masculino");
         userModel3.setPassword("123456");
         userService.save2User(userMapper.toUserDto(userModel3));
 
@@ -54,10 +50,8 @@ class UserServiceTest {
     void saveUserTest() {
         //given
         UserModel userModel1 = new UserModel();
-        userModel1.setFirstName("Eduardo");
-        userModel1.setLastName("brandão");
+        userModel1.setUsername("Eduardo");
         userModel1.setEmail("eduardo.brandao@mail.com");
-        userModel1.setGender("masculino");
         userModel1.setPassword("123456");
 
 
@@ -68,10 +62,8 @@ class UserServiceTest {
 
         //then
         assertNotNull(userModel);
-        assertTrue(userModel.getFirstName().contains("Eduardo"));
-        assertTrue(userModel.getLastName().contains("brandão"));
+        assertTrue(userModel.getUsername().contains("Eduardo"));
         assertTrue(userModel.getEmail().contains("eduardo.brandao@mail.com"));
-        assertTrue(userModel.getGender().contains("masculino"));
 
 
     }
@@ -87,9 +79,9 @@ class UserServiceTest {
         String json = Obj.writeValueAsString(object);
 
         String totalItems = JsonPath.read(json, "$.totalItems").toString();
-        String FirsUser = JsonPath.read(json, "$.users[0].firstName").toString();
-        String SecondUser = JsonPath.read(json, "$.users[1].firstName").toString();
-        String ThirdUser = JsonPath.read(json, "$.users[2].firstName").toString();
+        String FirsUser = JsonPath.read(json, "$.users[0].username").toString();
+        String SecondUser = JsonPath.read(json, "$.users[1].username").toString();
+        String ThirdUser = JsonPath.read(json, "$.users[2].username").toString();
 
        // System.out.println(ArrayItems);
 
@@ -111,9 +103,9 @@ class UserServiceTest {
         //when
         String json = Obj.writeValueAsString(object);
         String totalItems = JsonPath.read(json, "$.totalItems").toString();
-        String FirsUser = JsonPath.read(json, "$.users[0].firstName").toString();
-        String SecondUser = JsonPath.read(json, "$.users[1].firstName").toString();
-        String ThirdUser = JsonPath.read(json, "$.users[2].firstName").toString();
+        String FirsUser = JsonPath.read(json, "$.users[0].username").toString();
+        String SecondUser = JsonPath.read(json, "$.users[1].username").toString();
+        String ThirdUser = JsonPath.read(json, "$.users[2].username").toString();
 
         //then
         assertTrue(totalItems.contains("3"));
@@ -122,24 +114,26 @@ class UserServiceTest {
         assertTrue(ThirdUser.contains("Marcia"));
     }
     @Order(4)
-    @DisplayName("Get All Users sorted and filtered by firstName ASC")
+    @DisplayName("Get All Users sorted and filtered by username ASC")
     @Test
     void getAllUsersFilterByFirstNamePartial() throws JsonProcessingException {
         //given
         ObjectMapper Obj = new ObjectMapper();
-        Object object = userService.findByFirstName("firstName","Ascending",0,5,"a");
+        Object object = userService.findByUsername("username","Ascending",0,5,"a");
 
         //when
         String json = Obj.writeValueAsString(object);
         String totalItems = JsonPath.read(json, "$.totalItems").toString();
-        String FirsUser = JsonPath.read(json, "$.users[0].firstName").toString();
-        String SecondUser = JsonPath.read(json, "$.users[1].firstName").toString();
+        String FirsUser = JsonPath.read(json, "$.users[0].username").toString();
+        String SecondUser = JsonPath.read(json, "$.users[1].username").toString();
 
         //then
         assertTrue(totalItems.contains("2"));
        assertTrue(FirsUser.contains("Eduardo"));
        assertTrue(SecondUser.contains("Marcia"));
     }
+
+    /**
     @Order(5)
     @DisplayName("Get All Users sorted and filtered by lastName ASC")
     @Test
@@ -179,7 +173,7 @@ class UserServiceTest {
        assertTrue(user.contains("brandão"));
     }
 
-
+**/
     @Order(7)
     @DisplayName("Get User by id")
    @Test
@@ -189,10 +183,8 @@ class UserServiceTest {
 
         //then
         assertNotNull(userModel);
-        assertTrue(userModel.getFirstName().contains("Marcia"));
-        assertTrue(userModel.getLastName().contains("Abrantes"));
+        assertTrue(userModel.getUsername().contains("Marcia"));
         assertTrue(userModel.getEmail().contains("marcia.abrantes@mail.com"));
-        assertTrue(userModel.getGender().contains("feminino"));
     }
 
     @Order(8)
@@ -201,18 +193,14 @@ class UserServiceTest {
     void updateUsertest() {
         //given
         UserModel userEdit = new UserModel();
-        userEdit.setFirstName("Marcia2");
-        userEdit.setLastName("Abrantes2");
-        userEdit.setGender("feminino2");
+        userEdit.setUsername("Marcia2");
 
 
         //when
        userService.update2User(userMapper.toUpdateUserDto(userEdit), 1L);
         userModel = userService.getUserById(1L);
        //then
-        assertTrue(userModel.getFirstName().contains("Marcia2"));
-        assertTrue(userModel.getLastName().contains("Abrantes2"));
-        assertTrue(userModel.getGender().contains("feminino2"));
+        assertTrue(userModel.getUsername().contains("Marcia2"));
 
     }
 

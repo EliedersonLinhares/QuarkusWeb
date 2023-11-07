@@ -9,6 +9,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
 import org.acme.security.SecurityUtils;
+import org.acme.security.refreshtoken.RefreshTokenService;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
@@ -17,7 +18,6 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import java.net.URI;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 
 @Path("/user")
@@ -26,9 +26,10 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class UserController {
 
-
-  private final UserService userService;
+    private final UserService userService;
     private final SecurityUtils securityUtils;
+
+    private final RefreshTokenService refreshTokenService;
 
     @GET
     @RolesAllowed({"admin","user"})
@@ -52,8 +53,10 @@ public class UserController {
     @Operation(description = "Login user and generate a JWT token and store on cookie")
     public Response loginByEmail(@RequestBody LoginDto loginDto){
       Map<String,Object> response =  userService.authenticate(loginDto);
+      String cookieExpires = userService.getDateTimeInCookieFormat();
 
-        String cookieExpires = userService.getDateTimeInCookieFormat();
+
+
         return Response.ok(response.get("user")).header("Set-Cookie", "jwt="+response.get("token")+ ";Expires="+cookieExpires+"; HttpOnly=true ").build();
     }
 
@@ -61,6 +64,8 @@ public class UserController {
     @Path("/logout")
     @Operation(description = "Logout invalidating the cookie")
     public Response logout(){
+
+        refreshTokenService.deleteToken();
         return Response.ok().header("Set-Cookie", "jwt=;Expires=;").build();
     }
 
@@ -73,9 +78,9 @@ public class UserController {
             @QueryParam("page") @DefaultValue("0") int page,
             @QueryParam("sort")@DefaultValue("id") String sort,
             @QueryParam("order")@DefaultValue("Ascending") String order,
-            @QueryParam("firstname") String firstName,
-            @QueryParam("lastname") String lastName){
-
+            //@QueryParam("firstname") String firstName,
+            @QueryParam("username") String username){
+/**
         if(Stream.of(firstName,lastName).allMatch(Objects::nonNull)){
             return  Response.ok( userService.findByfirstNameAndlastName(sort,order,page,size,firstName,lastName)
             ).build();
@@ -84,8 +89,9 @@ public class UserController {
             return  Response.ok( userService.findByFirstName(sort,order,page,size,firstName)
        ).build();
         }
-        if(Objects.nonNull(lastName)){
-            return  Response.ok( userService.findBylastName(sort,order,page,size,lastName)
+ **/
+        if(Objects.nonNull(username)){
+            return  Response.ok( userService.findByUsername(sort,order,page,size,username)
         ).build();
         }
         //Order can be Ascending or Descending
@@ -101,6 +107,13 @@ public class UserController {
     public Response saveUser(@Valid @RequestBody UserDto user){
       userService.save2User(user);
      return Response.created(URI.create("/user/" + user.id())).build();
+
+    }
+    @GET
+    @Path("/userinformation")
+    @PermitAll
+    public Response getUserInformation(){
+        return Response.ok(securityUtils.userfromIdentity()).build();
 
     }
 
@@ -145,6 +158,20 @@ public class UserController {
         userService.deleteUser(id);
        return Response.noContent().build();
 
+    }
+
+    @POST
+    @PermitAll
+    @Transactional
+    @Path("/refreshtoken")
+    public Response refreshToken(){
+        String id = securityUtils.getIdfromDecodedCookie();
+        UserModel userModel = userService.getUserById(Long.parseLong(id));
+
+        Map<String,Object> response =  userService.newJWT(userModel);
+        String cookieExpires = userService.getDateTimeInCookieFormat();
+
+        return Response.ok("Token refresh sucessfully").header("Set-Cookie", "jwt="+response.get("token")+ ";Expires="+cookieExpires+"; HttpOnly=true ").build();
     }
 
 }

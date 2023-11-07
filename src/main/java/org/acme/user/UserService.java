@@ -10,6 +10,8 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.acme.exceptions.ObjectNotFoundException;
 import org.acme.security.SecurityUtils;
+import org.acme.security.refreshtoken.RefreshTokenRepository;
+import org.acme.security.refreshtoken.RefreshTokenService;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -24,11 +26,11 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class UserService {
 
-
-
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final SecurityUtils securityUtils;
+    private final RefreshTokenService refreshTokenService;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     public UserModel getUserById(long id){
 
@@ -37,13 +39,12 @@ public class UserService {
                 .orElseThrow(() -> new ObjectNotFoundException("User not found"));
     }
 
-
-
     @Transactional
     public void save2User(UserDto user) {
         verifyEmail(user);
         try {
           UserModel userModel = new UserModel();
+
             userMapper.setPasswordAndRole(user,userModel);
             userRepository.persist(userMapper.toUserModel(user));
         }catch (RuntimeException e) {
@@ -62,6 +63,8 @@ public class UserService {
 
     public Map<String, Object> authenticate(LoginDto loginDto){
         PanacheQuery<UserModel> userByEmail = userRepository.find("email", loginDto.email());
+
+
         if(Objects.isNull(userByEmail.firstResult())){
             throw new ObjectNotFoundException("User not found");
         }
@@ -69,6 +72,19 @@ public class UserService {
                 .verify(loginDto.password().toCharArray(),
                 userByEmail.firstResult().getPassword()).verified){
             throw new ObjectNotFoundException("Credentials invalid");
+        }
+
+        refreshTokenService.createRefreshToken(loginDto.email());
+
+
+        Set<String> roles2 = userByEmail.firstResult().getRoles();
+        return securityUtils.encryptJwt(userByEmail, roles2);
+    }
+
+    public Map<String, Object> newJWT(UserModel userModel){
+        PanacheQuery<UserModel> userByEmail = userRepository.find("email", userModel.getEmail());
+        if(Objects.isNull(userByEmail.firstResult())){
+            throw new ObjectNotFoundException("User not found");
         }
 
         Set<String> roles2 = userByEmail.firstResult().getRoles();
@@ -133,13 +149,13 @@ public class UserService {
                 .direction(Sort.Direction.valueOf(order))), page, size);
     }
 
-    public Object findByFirstName(String sort, String order, int page, int size, String firstName) {
+    public Object findByUsername(String sort, String order, int page, int size, String username) {
         return getPaginatedResponse(userRepository.find(
-                "lower(firstName) like :firstName",
+                "lower(username) like :username",
                 sortOrder(sort, order),
-                Parameters.with("firstName", "%" + firstName.toLowerCase() + "%")), page, size);
+                Parameters.with("username", "%" + username.toLowerCase() + "%")), page, size);
     }
-
+/**
     public Object findBylastName(String sort, String order, int page, int size, String lastName) {
         return getPaginatedResponse(userRepository.find(
                 "lower(lastName) like :lastName",
@@ -156,7 +172,7 @@ public class UserService {
                         .and("lastName", "%" + lastName.toLowerCase() + "%")),
                 page, size);
     }
-
+**/
     private Sort sortOrder(String sort, String order) {
         return Sort.by(sort).direction(Sort.Direction.valueOf(order));
     }
@@ -164,8 +180,9 @@ public class UserService {
     public String getDateTimeInCookieFormat() {
         OffsetDateTime oneHourFromNow
                 = OffsetDateTime.now(ZoneOffset.UTC)
-                .plus(Duration.ofDays(7));
+                .plus(Duration.ofDays(365));
         return DateTimeFormatter.RFC_1123_DATE_TIME
                 .format(oneHourFromNow);
     }
+
 }

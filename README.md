@@ -22,7 +22,12 @@ using Quarkus and java
 
 <b>`Security`</b> -> Security by Jwt save on cookies 
 
+<b>`Refresh Token`</b> -> Token refresh implemented
+
 <b>`Authorization`</b> -> All endpoints secure by roles
+
+<b>`Tests`</b> -> Include tests for controller and service layers with Junit 5
+and RestAssured
 
 
 ## Running the application in development mode
