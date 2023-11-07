@@ -18,14 +18,11 @@ public class UserModel {
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Setter(AccessLevel.NONE)
     Long id;
-    String firstName;
-    String lastName;
+    String username;
     String email;
-    String gender;
 
     @JsonIgnore
     String password;
-
 
     @ElementCollection
     @CollectionTable(name = "USER_ROLES")

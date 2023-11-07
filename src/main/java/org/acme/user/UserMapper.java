@@ -24,18 +24,14 @@ public interface UserMapper {
     void updateUser(UpdateUserDto updateUserDto, @MappingTarget UserModel userModel);
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "firstName", ignore = true)
-    @Mapping(target = "lastName", ignore = true)
+    @Mapping(target = "username", ignore = true)
     @Mapping(target = "email", ignore = true)
     @Mapping(target = "password", ignore = true)
-    @Mapping(target = "gender", ignore = true)
     void updateUserRole(UpdateUserRole updateUserRole, @MappingTarget UserModel userModel);
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "firstName", ignore = true)
-    @Mapping(target = "lastName", ignore = true)
+    @Mapping(target = "username", ignore = true)
     @Mapping(target = "email", ignore = true)
-    @Mapping(target = "gender", ignore = true)
     @Mapping(target = "roles", ignore = true)
     void updatePassword(UpdatePassword updatePassword, @MappingTarget UserModel userModel);
 
