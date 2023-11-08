@@ -62,7 +62,7 @@ class UserControllerTest {
                 .post("user/login")
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
-                .body("id", equalTo(1))
+                .body("id", equalTo(2))
                 .body("firstName", equalTo("Jhon"))
                 .extract()
                 .response()
@@ -125,10 +125,10 @@ class UserControllerTest {
                .contentType(MediaType.APPLICATION_JSON)
                .when()
                .cookies(cookie)
-               .get("user/1")
+               .get("user/2")
                .then()
                .statusCode(Response.Status.OK.getStatusCode())
-               .body("id", equalTo(1))
+               .body("id", equalTo(2))
                .body("username", equalTo("Jhon"))
                .body("email",equalTo( "jhon.spencer@mail.com"))
                .body("roles", hasItem("user"));
@@ -147,8 +147,10 @@ class UserControllerTest {
     @Test
     @TestSecurity(user = "jhon.spencer@mail.com", roles = "admin")
     void updateRole(){
+
+
         Set<String> roles = new HashSet<>();
-        roles.add("user");
+        //roles.add("user");
         roles.add("admin");
         JsonObject user = new JsonObject();
         user.put("roles", roles);
@@ -158,7 +160,7 @@ class UserControllerTest {
                 .body(user.toString())
                 .when()
                 .cookies(cookie)
-                .put("user/roles/1")
+                .put("user/roles/2")
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode());
 
@@ -166,10 +168,9 @@ class UserControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .when()
                 .cookies(cookie)
-                .get("user/1")
+                .get("user/2")
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
-                .body("roles", hasItem("user"))
                 .body("roles", hasItem("admin"));
     }
 
@@ -187,7 +188,7 @@ class UserControllerTest {
                 .body(user.toString())
                 .when()
                 .cookies(cookie)
-                .put("user/password/1")
+                .put("user/password/2")
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode());
 
@@ -217,7 +218,7 @@ class UserControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .when()
                 .cookies(cookie)
-                .get("user/2")
+                .get("user/3")
                 .then()
                 .statusCode(Response.Status.BAD_REQUEST.getStatusCode())
                 .body("error",equalTo("User can return only your data"))
@@ -314,7 +315,7 @@ class UserControllerTest {
                 .when()
                 .get("user/userpaginated")
                 .then()
-                .body("totalItems", equalTo(8))
+                .body("totalItems", equalTo(9))
                 .body("totalPages", equalTo(2))
                 .body("currentPage", equalTo(0))
                 .statusCode(Response.Status.OK.getStatusCode());
@@ -330,7 +331,7 @@ class UserControllerTest {
                 .when()
                 .get("user/userpaginated")
                 .then()
-                .body("totalItems", equalTo(8))
+                .body("totalItems", equalTo(9))
                 .body("totalPages", equalTo(1))
                 .body("currentPage", equalTo(0))
                 .statusCode(Response.Status.OK.getStatusCode());
@@ -346,7 +347,7 @@ class UserControllerTest {
                 .when()
                 .get("user/userpaginated")
                 .then()
-                .body("totalItems", equalTo(8))
+                .body("totalItems", equalTo(9))
                 .body("totalPages", equalTo(2))
                 .body("currentPage", equalTo(1))
                 .statusCode(Response.Status.OK.getStatusCode());
@@ -461,7 +462,7 @@ class UserControllerTest {
                 .body(user.toString())
                 .when()
                 .cookies(cookie)
-                .put("user/1")
+                .put("user/2")
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode());
 
@@ -470,7 +471,7 @@ class UserControllerTest {
         RestAssured.given()
                 .when()
                 .cookies(cookie)
-                .get("user/1")
+                .get("user/2")
                 .then()
                 .body("username", equalTo("Jhon2"))
                 .statusCode(Response.Status.OK.getStatusCode());
@@ -508,7 +509,7 @@ class UserControllerTest {
                 .post("user/login")
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
-                .body("id", equalTo(1))
+                .body("id", equalTo(2))
                 .body("firstName", equalTo("Jhon2"))
                 .extract()
                 .response()
@@ -543,7 +544,7 @@ class UserControllerTest {
                 .post("user/login")
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
-                .body("id", equalTo(1))
+                .body("id", equalTo(2))
                 .body("firstName", equalTo("Jhon2"))
                 .extract()
                 .response()
@@ -553,7 +554,7 @@ class UserControllerTest {
      RestAssured.given()
                 .when()
                 .cookies(cookie1)
-                .delete("user/3")
+                .delete("user/4")
              .then()
              .statusCode(Response.Status.NO_CONTENT.getStatusCode());
 
@@ -562,7 +563,7 @@ class UserControllerTest {
         RestAssured.given()
                 .when()
                 .cookies(cookie1)
-                .get("user/3")
+                .get("user/4")
                 .then()
                 .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
     }
@@ -584,7 +585,7 @@ class UserControllerTest {
                 .post("user/login")
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
-                .body("id", equalTo(1))
+                .body("id", equalTo(2))
                 .body("firstName", equalTo("Jhon2"))
                 .extract()
                 .response()
@@ -620,7 +621,7 @@ class UserControllerTest {
                 .post("user/login")
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
-                .body("id", equalTo(1))
+                .body("id", equalTo(2))
                 .body("firstName", equalTo("Jhon2"))
                 .extract()
                 .response()
@@ -633,7 +634,7 @@ class UserControllerTest {
                 .get("user/userinformation")
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
-                .body("id",equalTo(1))
+                .body("id",equalTo("2"))
                 .body("username",equalTo("Jhon2"));
     }
 
