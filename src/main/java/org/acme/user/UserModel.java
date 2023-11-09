@@ -21,6 +21,9 @@ public class UserModel {
     String username;
     String email;
 
+    private boolean isEnabled = false;
+    private boolean isChecked = false;
+
     @JsonIgnore
     String password;
 

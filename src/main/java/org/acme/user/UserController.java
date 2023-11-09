@@ -2,6 +2,7 @@ package org.acme.user;
 
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
@@ -52,11 +53,9 @@ public class UserController {
     })
     @Operation(description = "Login user and generate a JWT token and store on cookie")
     public Response loginByEmail(@RequestBody LoginDto loginDto){
+
       Map<String,Object> response =  userService.authenticate(loginDto);
       String cookieExpires = userService.getDateTimeInCookieFormat();
-
-
-
         return Response.ok(response.get("user")).header("Set-Cookie", "jwt="+response.get("token")+ ";Expires="+cookieExpires+"; HttpOnly=true ").build();
     }
 
@@ -101,14 +100,21 @@ public class UserController {
     }
 
     @POST
+    @Path("/register")
     @PermitAll
     @Transactional
     @Operation(description = "Register a new user")
-    public Response saveUser(@Valid @RequestBody UserDto user){
+    public Response saveUser(@Valid @RequestBody UserDto user, HttpServletRequest request){
       userService.save2User(user);
+      //String url = applicationURL(request);
      return Response.created(URI.create("/user/" + user.id())).build();
 
     }
+
+    private String applicationURL(HttpServletRequest request) {
+       return "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
+    }
+
     @GET
     @Path("/userinformation")
     @PermitAll

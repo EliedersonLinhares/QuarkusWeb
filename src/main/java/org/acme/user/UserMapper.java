@@ -6,8 +6,11 @@ import org.mapstruct.*;
 import java.util.HashSet;
 import java.util.Set;
 
+
+
 @Mapper(componentModel = "jakarta",nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface UserMapper {
+
 
     @Mapping(target = "roles", ignore = true)
     UserModel toUserModel(UserDto userDto);
@@ -20,18 +23,24 @@ public interface UserMapper {
     @Mapping(target = "email", ignore = true)
     @Mapping(target = "password", ignore = true)
     @Mapping(target = "roles", ignore = true)
+    @Mapping(target = "enabled", ignore = true)
+    @Mapping(target = "checked", ignore = true)
     void updateUser(UpdateUserDto updateUserDto, @MappingTarget UserModel userModel);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "username", ignore = true)
     @Mapping(target = "email", ignore = true)
     @Mapping(target = "password", ignore = true)
+    @Mapping(target = "enabled", ignore = true)
+    @Mapping(target = "checked", ignore = true)
     void updateUserRole(UpdateUserRole updateUserRole, @MappingTarget UserModel userModel);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "username", ignore = true)
     @Mapping(target = "email", ignore = true)
     @Mapping(target = "roles", ignore = true)
+    @Mapping(target = "enabled", ignore = true)
+    @Mapping(target = "checked", ignore = true)
     void updatePassword(UpdatePassword updatePassword, @MappingTarget UserModel userModel);
 
     @AfterMapping

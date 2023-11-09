@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.acme.exceptions.ObjectNotFoundException;
 import org.acme.security.SecurityUtils;
 import org.acme.security.refreshtoken.RefreshTokenService;
+import org.acme.security.verificationtoken.VerificationTokenModel;
+import org.acme.security.verificationtoken.VerificationTokenRepository;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -29,6 +31,7 @@ public class UserService {
     private final UserMapper userMapper;
     private final SecurityUtils securityUtils;
     private final RefreshTokenService refreshTokenService;
+    private final VerificationTokenRepository tokenRepository;
 
     public UserModel getUserById(long id){
 
@@ -183,4 +186,8 @@ public class UserService {
                 .format(oneHourFromNow);
     }
 
+    public void saveUserVerificationToken(UserModel user, String token) {
+    var verificationToken  = new VerificationTokenModel(token,user);
+     tokenRepository.persist(verificationToken);
+    }
 }

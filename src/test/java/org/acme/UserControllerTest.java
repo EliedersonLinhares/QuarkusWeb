@@ -42,7 +42,7 @@ class UserControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(user.toString())
                 .when()
-                .post("user")
+                .post("user/register")
                 .then()
                 .statusCode(Response.Status.CREATED.getStatusCode());
     }
@@ -209,7 +209,7 @@ class UserControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(user.toString())
                 .when()
-                .post("user")
+                .post("user/register")
                 .then()
                 .statusCode(Response.Status.CREATED.getStatusCode());
 
@@ -239,7 +239,7 @@ class UserControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(user.toString())
                 .when()
-                .post("user")
+                .post("user/register")
                 .then()
                 .statusCode(Response.Status.BAD_REQUEST.getStatusCode())
                 .body("error",equalTo("Email already in use"))
@@ -283,32 +283,32 @@ class UserControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(user2.toString())
                 .when()
-                .post("user");
+                .post("user/register");
         RestAssured.given()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(user3.toString())
                 .when()
-                .post("user");
+                .post("user/register");
         RestAssured.given()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(user4.toString())
                 .when()
-                .post("user");
+                .post("user/register");
         RestAssured.given()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(user5.toString())
                 .when()
-                .post("user");
+                .post("user/register");
         RestAssured.given()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(user6.toString())
                 .when()
-                .post("user");
+                .post("user/register");
         RestAssured.given()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(user7.toString())
                 .when()
-                .post("user");
+                .post("user/register");
 
 
         RestAssured.given()

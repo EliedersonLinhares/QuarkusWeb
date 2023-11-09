@@ -11,6 +11,8 @@ import org.acme.user.UserModel;
 import org.acme.user.UserService;
 import org.junit.jupiter.api.*;
 
+import java.util.stream.Stream;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @QuarkusTest
@@ -57,7 +59,7 @@ class UserServiceTest {
 
         //when
         userService.save2User(userMapper.toUserDto(userModel1));
-        userModel = userService.getUserById(3L);
+        userModel = userService.getUserById(4L);
 
 
         //then
@@ -79,17 +81,19 @@ class UserServiceTest {
         String json = Obj.writeValueAsString(object);
 
         String totalItems = JsonPath.read(json, "$.totalItems").toString();
-        String FirsUser = JsonPath.read(json, "$.users[0].username").toString();
+        String FirstUser = JsonPath.read(json, "$.users[0].username").toString();
         String SecondUser = JsonPath.read(json, "$.users[1].username").toString();
         String ThirdUser = JsonPath.read(json, "$.users[2].username").toString();
+        String ForthdUser = JsonPath.read(json, "$.users[3].username").toString();
 
-       // System.out.println(ArrayItems);
+        System.out.println(Stream.of(FirstUser,SecondUser,ThirdUser,ForthdUser).toList().toString());
 
         //then
-        assertTrue(totalItems.contains("3"));
-        assertTrue(FirsUser.contains("Marcia"));
-        assertTrue(SecondUser.contains("Roberto"));
-        assertTrue(ThirdUser.contains("Eduardo"));
+        assertTrue(totalItems.contains("4"));
+        assertTrue(FirstUser.contains("admin"));
+        assertTrue(SecondUser.contains("Marcia"));
+        assertTrue(ThirdUser.contains("Roberto"));
+        assertTrue(ForthdUser.contains("Eduardo"));
 
     }
     @Order(3)
@@ -103,15 +107,19 @@ class UserServiceTest {
         //when
         String json = Obj.writeValueAsString(object);
         String totalItems = JsonPath.read(json, "$.totalItems").toString();
-        String FirsUser = JsonPath.read(json, "$.users[0].username").toString();
+        String FirstUser = JsonPath.read(json, "$.users[0].username").toString();
         String SecondUser = JsonPath.read(json, "$.users[1].username").toString();
         String ThirdUser = JsonPath.read(json, "$.users[2].username").toString();
+        String ForthdUser = JsonPath.read(json, "$.users[3].username").toString();
+
+        System.out.println(Stream.of(FirstUser,SecondUser,ThirdUser,ForthdUser).toList().toString());
 
         //then
-        assertTrue(totalItems.contains("3"));
-        assertTrue(FirsUser.contains("Eduardo"));
+        assertTrue(totalItems.contains("4"));
+        assertTrue(FirstUser.contains("Eduardo"));
         assertTrue(SecondUser.contains("Roberto"));
         assertTrue(ThirdUser.contains("Marcia"));
+        assertTrue(ForthdUser.contains("admin"));
     }
     @Order(4)
     @DisplayName("Get All Users sorted and filtered by username ASC")
@@ -124,13 +132,16 @@ class UserServiceTest {
         //when
         String json = Obj.writeValueAsString(object);
         String totalItems = JsonPath.read(json, "$.totalItems").toString();
-        String FirsUser = JsonPath.read(json, "$.users[0].username").toString();
+        String FirstUser = JsonPath.read(json, "$.users[0].username").toString();
         String SecondUser = JsonPath.read(json, "$.users[1].username").toString();
+        String ThirdUser = JsonPath.read(json, "$.users[2].username").toString();
 
+        System.out.println(Stream.of(FirstUser,SecondUser,ThirdUser).toList().toString());
         //then
-        assertTrue(totalItems.contains("2"));
-       assertTrue(FirsUser.contains("Eduardo"));
+        assertTrue(totalItems.contains("3"));
+        assertTrue(FirstUser.contains("Eduardo"));
        assertTrue(SecondUser.contains("Marcia"));
+       assertTrue(ThirdUser.contains("admin"));
     }
 
     /**
@@ -179,7 +190,7 @@ class UserServiceTest {
    @Test
     void getUserByIdTest() {
         //when
-        userModel = userService.getUserById(1L);
+        userModel = userService.getUserById(2L);
 
         //then
         assertNotNull(userModel);
