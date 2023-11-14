@@ -10,7 +10,7 @@ public class ObjectNotFoundExceptionMapper implements ExceptionMapper<ObjectNotF
     @Override
     public Response toResponse(ObjectNotFoundException e) {
 
-        StandardError err = new StandardError(System.currentTimeMillis(), Response.Status.BAD_REQUEST.getStatusCode(),
+        StandardMsg err = new StandardMsg(System.currentTimeMillis(), Response.Status.BAD_REQUEST.getStatusCode(),
                 e.getMessage());
 
         return Response.

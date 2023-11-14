@@ -7,9 +7,9 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class StandardError {
+public class StandardMsg {
     private Long timestamp;
     private Integer status;
-    private String error;
+    private String msg;
 
 }
