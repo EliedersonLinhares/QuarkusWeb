@@ -11,6 +11,9 @@ import org.acme.user.UserModel;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
 import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -51,10 +54,6 @@ public class SecurityUtils {
         return response;
     }
 
-    public String getIDfromidentity(){
-        String principal = identity.getPrincipal().getName();
-        return principal.substring(principal.indexOf("id",principal.indexOf("=")) +3,principal.indexOf("}",principal.indexOf("}")));
-    }
     public String getIdfromDecodedCookie(){
       try {
           HttpServerRequest request = ResteasyProviderFactory.getInstance().getContextData(HttpServerRequest.class);
@@ -109,5 +108,13 @@ public class SecurityUtils {
         response.put("user", user);
         response.put("token", token);
         return response;
+    }
+
+    public String getDateTimeInCookieFormat() {
+        OffsetDateTime oneHourFromNow
+                = OffsetDateTime.now(ZoneOffset.UTC)
+                .plus(Duration.ofDays(365));
+        return DateTimeFormatter.RFC_1123_DATE_TIME
+                .format(oneHourFromNow);
     }
 }

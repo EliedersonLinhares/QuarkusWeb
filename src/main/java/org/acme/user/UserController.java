@@ -1,22 +1,29 @@
 package org.acme.user;
 
+import io.vertx.core.http.Cookie;
+import io.vertx.core.http.CookieSameSite;
+import io.vertx.core.http.HttpHeaders;
+import io.vertx.core.http.HttpServerRequest;
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.acme.security.SecurityUtils;
 import org.acme.security.refreshtoken.RefreshTokenService;
+import org.acme.security.verificationtoken.VerificationTokenModel;
+import org.acme.utils.RegistrationCompleteEvent;
+import org.acme.utils.ResponseBase;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 
-import java.net.URI;
 import java.util.Map;
 import java.util.Objects;
 
@@ -25,12 +32,15 @@ import java.util.Objects;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @RequiredArgsConstructor
+@Slf4j
 public class UserController {
 
     private final UserService userService;
     private final SecurityUtils securityUtils;
-
     private final RefreshTokenService refreshTokenService;
+    private final RegistrationCompleteEvent event;
+    private final HttpServerRequest serverRequest;
+    private final ResponseBase responseBase;
 
     @GET
     @RolesAllowed({"admin","user"})
@@ -55,7 +65,7 @@ public class UserController {
     public Response loginByEmail(@RequestBody LoginDto loginDto){
 
       Map<String,Object> response =  userService.authenticate(loginDto);
-      String cookieExpires = userService.getDateTimeInCookieFormat();
+      String cookieExpires = securityUtils.getDateTimeInCookieFormat();
         return Response.ok(response.get("user")).header("Set-Cookie", "jwt="+response.get("token")+ ";Expires="+cookieExpires+"; HttpOnly=true ").build();
     }
 
@@ -104,21 +114,65 @@ public class UserController {
     @PermitAll
     @Transactional
     @Operation(description = "Register a new user")
-    public Response saveUser(@Valid @RequestBody UserDto user, HttpServletRequest request){
-      userService.save2User(user);
-      //String url = applicationURL(request);
-     return Response.created(URI.create("/user/" + user.id())).build();
+    public Response saveUser(@Valid @RequestBody UserDto user, @Context HttpServerRequest request){
+        userService.save2User(user);
+        event.sendVerificationToken(user.email(),applicationURL(request));
+
+     return Response.ok().build();
 
     }
 
-    private String applicationURL(HttpServletRequest request) {
-       return "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
+    private String applicationURL(@Context HttpServerRequest request) {
+       return "http://" + request.host();
     }
+
+    @GET
+    @Path("/verifyEmail")
+    @PermitAll
+    public Response verifyEmail( @QueryParam("token") String token){
+
+
+        String url = applicationURL(serverRequest) + "/user/resend-verificationtoken?token=" + token;
+
+        String verificationResult = userService.validateToken(token);
+        if (verificationResult.equalsIgnoreCase("invalid")) {
+            return responseBase.toResponse(Response.Status.OK.getStatusCode(),"Invalid token ou checked account!");
+        }
+
+        if (verificationResult.equalsIgnoreCase("expired")) {
+            return responseBase.toResponse(Response.Status.OK.getStatusCode(),"Tempo de confirmação expirado,<a href=\"" + url
+                    + "\">Clique aqui! E obtenha um novo lik de confirmação.</a>");
+        }
+
+        return responseBase.toResponse(Response.Status.OK.getStatusCode(),"verification success, now you can log on system!");
+    }
+    @GET
+    @Path("/resend-verificationtoken")
+    @PermitAll
+    public Response resendVerificationToken(@QueryParam("token") String oldToken,@Context HttpServerRequest request) {
+        VerificationTokenModel verificationToken = userService.generateNewVerificationToken(oldToken);
+        resendVerificationTokenEmail(applicationURL(request), verificationToken);
+
+
+
+        return Response.ok("Novo link enviado para seu email, por favor, confirme para ativar sua conta").build();
+    }
+
+    private void resendVerificationTokenEmail(String applicationUrl, VerificationTokenModel verificationToken) {
+
+        String url = applicationUrl + "/user/verifyEmail?token=" + verificationToken.getToken();
+        log.info("Url example: {}", url);
+    }
+
+
 
     @GET
     @Path("/userinformation")
     @PermitAll
-    public Response getUserInformation(){
+    public Response getUserInformation(@Context HttpServerRequest request){
+        System.out.println("host(servername)" + request.host());
+        System.out.println("port" + request.path());
+        System.out.println(applicationURL(request));
         return Response.ok(securityUtils.userfromIdentity()).build();
 
     }
@@ -175,9 +229,20 @@ public class UserController {
         UserModel userModel = userService.getUserById(Long.parseLong(id));
 
         Map<String,Object> response =  userService.newJWT(userModel);
-        String cookieExpires = userService.getDateTimeInCookieFormat();
+      //  String cookieExpires = securityUtils.getDateTimeInCookieFormat();
 
-        return Response.ok("Token refresh sucessfully").header("Set-Cookie", "jwt="+response.get("token")+ ";Expires="+cookieExpires+"; HttpOnly=true ").build();
+        var cookie = Cookie.cookie("jwt", response.get("token").toString())
+                .setSameSite(CookieSameSite.STRICT)
+                .setPath("/user")
+                .setMaxAge(45000000000L)
+                .setHttpOnly(true)
+                .setSecure(true)
+                ;
+
+        return Response.ok()
+                .header(HttpHeaders.SET_COOKIE.toString(), cookie.encode())
+                .build();
+      // return Response.ok("Token refresh successfully").header("Set-Cookie", "jwt="+response.get("token")+ ";Expires="+cookieExpires+"; HttpOnly=true ").build();
     }
 
 }

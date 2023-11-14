@@ -14,14 +14,7 @@ import org.acme.security.refreshtoken.RefreshTokenService;
 import org.acme.security.verificationtoken.VerificationTokenModel;
 import org.acme.security.verificationtoken.VerificationTokenRepository;
 
-import java.time.Duration;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 @ApplicationScoped
 @RequiredArgsConstructor
@@ -47,10 +40,15 @@ public class UserService {
           UserModel userModel = new UserModel();
 
             userMapper.setPasswordAndRole(user,userModel);
-            userRepository.persist(userMapper.toUserModel(user));
+            userRepository.persistAndFlush(userMapper.toUserModel(user));
         }catch (RuntimeException e) {
             throw new ObjectNotFoundException("Error saving user");
         }
+
+    }
+
+    public UserModel getUserByEmail(String email) {
+       return userRepository.find("email", email).firstResult();
 
     }
 
@@ -178,16 +176,50 @@ public class UserService {
         return Sort.by(sort).direction(Sort.Direction.valueOf(order));
     }
 
-    public String getDateTimeInCookieFormat() {
-        OffsetDateTime oneHourFromNow
-                = OffsetDateTime.now(ZoneOffset.UTC)
-                .plus(Duration.ofDays(365));
-        return DateTimeFormatter.RFC_1123_DATE_TIME
-                .format(oneHourFromNow);
-    }
+
 
     public void saveUserVerificationToken(UserModel user, String token) {
-    var verificationToken  = new VerificationTokenModel(token,user);
+        int times = 1;
+    var verificationToken  = new VerificationTokenModel(token,user,times);
      tokenRepository.persist(verificationToken);
+    }
+
+    @Transactional
+    public String validateToken(String verificationToken) {
+        PanacheQuery<VerificationTokenModel> token = tokenRepository.find("token", verificationToken);
+       if(token.stream().findFirst().isEmpty()){
+           return "invalid";
+       }
+
+       if(token.firstResult().getCheckedTimes() > 4){
+
+           return "abuse";
+       }
+
+
+
+        UserModel user = token.firstResult().getUser();
+        Calendar calendar = Calendar.getInstance();
+        if((token.firstResult().getExpirationTime().getTime() - calendar.getTime().getTime()) <= 0){
+
+            int times = token.firstResult().getCheckedTimes() + 1;
+            token.firstResult().setCheckedTimes(times);
+            tokenRepository.persistAndFlush(token.firstResult());
+            return  "expired";
+        }
+        user.setChecked(true);
+        userRepository.persist(user);
+        tokenRepository.delete(token.firstResult());
+        return "valid";
+    }
+
+    @Transactional
+    public VerificationTokenModel generateNewVerificationToken(String oldToken) {
+        VerificationTokenModel verificationToken = tokenRepository.find("token", oldToken).firstResult();
+        var verificationTokenTime = new VerificationTokenModel();
+        verificationToken.setToken(UUID.randomUUID().toString());
+        verificationToken.setExpirationTime(verificationTokenTime.getTokenExpirationTime());
+        tokenRepository.persist(verificationToken);
+        return verificationToken;
     }
 }
