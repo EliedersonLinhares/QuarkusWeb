@@ -1,6 +1,5 @@
 package org.acme.security;
 
-import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.security.identity.SecurityIdentity;
 import io.smallrye.jwt.build.Jwt;
 import io.vertx.core.http.HttpServerRequest;
@@ -63,7 +62,7 @@ public class SecurityUtils {
           String payload = new String(decoder.decode(chunks[1]));
 
           return payload.substring(payload.indexOf("id", payload.indexOf("=")) + 3, payload.indexOf("}", payload.indexOf("}")));
-      }catch (ArrayIndexOutOfBoundsException e){
+      }catch (Exception e){
           throw new ObjectNotFoundException("Cookie inválido ou inexistente");
       }
       }
@@ -94,10 +93,10 @@ public class SecurityUtils {
         //System.out.println("roles-----" + roles);
     }
 
-    public Map<String, Object> encryptJwt(PanacheQuery<UserModel> userByEmail, Set<String> roles2) {
+    public Map<String, Object> encryptJwt(UserModel userByEmail, Set<String> roles2) {
         Map<String, Object> user = new HashMap<>();
-        user.put("id", userByEmail.firstResult().getId());
-        user.put("firstName", userByEmail.firstResult().getUsername());
+        user.put("id", userByEmail.getId());
+        user.put("firstName", userByEmail.getUsername());
 
         String token = Jwt.upn(user.toString())
                 .groups(roles2)

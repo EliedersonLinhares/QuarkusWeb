@@ -11,7 +11,7 @@ public class ObjectNotFoundExceptionMapper implements ExceptionMapper<ObjectNotF
     public Response toResponse(ObjectNotFoundException e) {
 
         StandardMsg err = new StandardMsg(System.currentTimeMillis(), Response.Status.BAD_REQUEST.getStatusCode(),
-                e.getMessage());
+                e.getMessage(),"");
 
         return Response.
                  status(Response.Status.BAD_REQUEST)

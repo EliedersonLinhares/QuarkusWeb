@@ -8,10 +8,12 @@ import org.acme.exceptions.StandardMsg;
 @ApplicationScoped
 public class ResponseBase {
 
-    public Response toResponse(Integer status, String msg) {
+
+
+    public Response toResponse(Integer status, String msg, String link) {
 
         StandardMsg err = new StandardMsg(System.currentTimeMillis(), status,
-                msg);
+                msg,link);
 
         return Response.
                 status(status)

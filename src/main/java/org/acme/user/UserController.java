@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.Objects;
 
 
-@Path("/user")
+@Path("/api/user")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @RequiredArgsConstructor
@@ -40,7 +40,9 @@ public class UserController {
     private final RefreshTokenService refreshTokenService;
     private final RegistrationCompleteEvent event;
     private final HttpServerRequest serverRequest;
+    private final UserMapper userMapper;
     private final ResponseBase responseBase;
+
 
     @GET
     @RolesAllowed({"admin","user"})
@@ -55,6 +57,8 @@ public class UserController {
         UserModel user = userService.getUserById(id);
         return Response.ok(user).build();
     }
+
+
     @POST
     @Path("/login")
     @APIResponses(value = {
@@ -64,10 +68,26 @@ public class UserController {
     @Operation(description = "Login user and generate a JWT token and store on cookie")
     public Response loginByEmail(@RequestBody LoginDto loginDto){
 
-      Map<String,Object> response =  userService.authenticate(loginDto);
-      String cookieExpires = securityUtils.getDateTimeInCookieFormat();
-        return Response.ok(response.get("user")).header("Set-Cookie", "jwt="+response.get("token")+ ";Expires="+cookieExpires+"; HttpOnly=true ").build();
+      Map<String,Object> response =  userService.authenticate( userMapper.toLoginDto(loginDto));
+
+
+        var cookie = Cookie.cookie("jwt", response.get("token").toString())
+                .setSameSite(CookieSameSite.STRICT)
+                .setPath("/api")
+                .setMaxAge(45000000000L)
+                .setHttpOnly(true)
+                .setSecure(true)
+                ;
+
+        return Response.ok()
+                .header(HttpHeaders.SET_COOKIE.toString(), cookie.encode())
+                .build();
+
+
+     // String cookieExpires = securityUtils.getDateTimeInCookieFormat();
+       // return Response.ok(response.get("user")).header("Set-Cookie", "jwt="+response.get("token")+ ";Expires="+cookieExpires+"; HttpOnly=true ").build();
     }
+
 
     @GET
     @Path("/logout")
@@ -77,6 +97,7 @@ public class UserController {
         refreshTokenService.deleteToken();
         return Response.ok().header("Set-Cookie", "jwt=;Expires=;").build();
     }
+
 
     @GET
     @RolesAllowed("admin")
@@ -109,6 +130,7 @@ public class UserController {
         ).build();
     }
 
+
     @POST
     @Path("/register")
     @PermitAll
@@ -126,26 +148,30 @@ public class UserController {
        return "http://" + request.host();
     }
 
+
     @GET
     @Path("/verifyEmail")
     @PermitAll
     public Response verifyEmail( @QueryParam("token") String token){
-
-
         String url = applicationURL(serverRequest) + "/user/resend-verificationtoken?token=" + token;
-
         String verificationResult = userService.validateToken(token);
-        if (verificationResult.equalsIgnoreCase("invalid")) {
-            return responseBase.toResponse(Response.Status.OK.getStatusCode(),"Invalid token ou checked account!");
-        }
 
-        if (verificationResult.equalsIgnoreCase("expired")) {
-            return responseBase.toResponse(Response.Status.OK.getStatusCode(),"Tempo de confirmação expirado,<a href=\"" + url
-                    + "\">Clique aqui! E obtenha um novo lik de confirmação.</a>");
-        }
+        return switch (verificationResult) {
+            case "abuse" ->
+                    responseBase.toResponse(Response.Status.OK.getStatusCode(), "Exceed number of verification, wait before try again!", "");
+            case "timeout" ->
+                    responseBase.toResponse(Response.Status.OK.getStatusCode(), "Time of new verification no reached, wait before try login!", "");
+            case "invalid" ->
+                    responseBase.toResponse(Response.Status.OK.getStatusCode(), "Invalid token ou checked account!", "");
+            case "expired" ->
+                    responseBase.toResponse(Response.Status.OK.getStatusCode(), "Confirmation time expired", url);
+            default ->
+                    responseBase.toResponse(Response.Status.OK.getStatusCode(), "verification success, now you can log on system!", "");
+        };
 
-        return responseBase.toResponse(Response.Status.OK.getStatusCode(),"verification success, now you can log on system!");
     }
+
+
     @GET
     @Path("/resend-verificationtoken")
     @PermitAll
@@ -153,13 +179,11 @@ public class UserController {
         VerificationTokenModel verificationToken = userService.generateNewVerificationToken(oldToken);
         resendVerificationTokenEmail(applicationURL(request), verificationToken);
 
+        return responseBase.toResponse(Response.Status.OK.getStatusCode(),"New link send to your email, please ,confirm for activate your account","");
 
-
-        return Response.ok("Novo link enviado para seu email, por favor, confirme para ativar sua conta").build();
     }
 
     private void resendVerificationTokenEmail(String applicationUrl, VerificationTokenModel verificationToken) {
-
         String url = applicationUrl + "/user/verifyEmail?token=" + verificationToken.getToken();
         log.info("Url example: {}", url);
     }
@@ -169,13 +193,11 @@ public class UserController {
     @GET
     @Path("/userinformation")
     @PermitAll
-    public Response getUserInformation(@Context HttpServerRequest request){
-        System.out.println("host(servername)" + request.host());
-        System.out.println("port" + request.path());
-        System.out.println(applicationURL(request));
+    public Response getUserInformation(){
         return Response.ok(securityUtils.userfromIdentity()).build();
 
     }
+
 
     @PUT
     @RolesAllowed({"user","admin"})
@@ -188,6 +210,8 @@ public class UserController {
             return  Response.ok().build();
 
     }
+
+
     @PUT
     @RolesAllowed("admin")
     @Transactional
@@ -198,6 +222,7 @@ public class UserController {
         userService.updateUserRole(userDto,id);
         return  Response.ok().build();
     }
+
     @PUT
     @RolesAllowed({"user","admin"})
     @Transactional
@@ -209,6 +234,7 @@ public class UserController {
         return  Response.ok().build();
     }
 
+
     @DELETE
    @RolesAllowed("admin")
     @Path("/{id}")
@@ -219,6 +245,7 @@ public class UserController {
        return Response.noContent().build();
 
     }
+
 
     @POST
     @PermitAll
@@ -233,7 +260,7 @@ public class UserController {
 
         var cookie = Cookie.cookie("jwt", response.get("token").toString())
                 .setSameSite(CookieSameSite.STRICT)
-                .setPath("/user")
+                .setPath("/api")
                 .setMaxAge(45000000000L)
                 .setHttpOnly(true)
                 .setSecure(true)

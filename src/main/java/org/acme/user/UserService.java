@@ -8,6 +8,7 @@ import io.quarkus.panache.common.Sort;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.acme.exceptions.ObjectNotFoundException;
 import org.acme.security.SecurityUtils;
 import org.acme.security.refreshtoken.RefreshTokenService;
@@ -18,6 +19,7 @@ import java.util.*;
 
 @ApplicationScoped
 @RequiredArgsConstructor
+@Slf4j
 public class UserService {
 
     private final UserRepository userRepository;
@@ -25,6 +27,8 @@ public class UserService {
     private final SecurityUtils securityUtils;
     private final RefreshTokenService refreshTokenService;
     private final VerificationTokenRepository tokenRepository;
+
+    private static final int EXPIRATION_TIMEOUT = 4;
 
     public UserModel getUserById(long id){
 
@@ -35,7 +39,7 @@ public class UserService {
 
     @Transactional
     public void save2User(UserDto user) {
-        verifyEmail(user);
+        verifyEmailForLogin(user);
         try {
           UserModel userModel = new UserModel();
 
@@ -48,46 +52,56 @@ public class UserService {
     }
 
     public UserModel getUserByEmail(String email) {
+
        return userRepository.find("email", email).firstResult();
 
     }
 
-    private void verifyEmail(UserDto user) {
-        PanacheQuery<UserModel> userByEmail = userRepository.find("email", user.email());
-
-        if(Objects.nonNull(userByEmail.firstResult())){
+    private void verifyEmailForLogin(UserDto user) {
+        if(Objects.nonNull(getUserByEmail(user.email()))){
             throw new ObjectNotFoundException("Email already in use");
         }
     }
 
-    public Map<String, Object> authenticate(LoginDto loginDto){
-        PanacheQuery<UserModel> userByEmail = userRepository.find("email", loginDto.email());
+    @Transactional
+    public Map<String, Object> authenticate(UserModel userModel) {
+
+        UserModel user = getUserByEmail(userModel.getEmail());
 
 
-        if(Objects.isNull(userByEmail.firstResult())){
+        if(Objects.isNull(user)){
             throw new ObjectNotFoundException("User not found");
         }
+        if(!user.isChecked()){
+            throw new ObjectNotFoundException("Account not checked, verify your email");
+        }
+        if(!user.isEnabled()){
+            throw new ObjectNotFoundException("Disabled account, contact the Admin");
+        }
+
         if(!BCrypt.verifyer()
-                .verify(loginDto.password().toCharArray(),
-                userByEmail.firstResult().getPassword()).verified){
+                .verify(userModel.getPassword().toCharArray(),
+                user.getPassword()).verified){
+
             throw new ObjectNotFoundException("Credentials invalid");
         }
 
-        refreshTokenService.createRefreshToken(loginDto.email());
+
+        refreshTokenService.createRefreshToken(userModel.getEmail());
 
 
-        Set<String> roles2 = userByEmail.firstResult().getRoles();
-        return securityUtils.encryptJwt(userByEmail, roles2);
+        Set<String> roles2 = user.getRoles();
+        return securityUtils.encryptJwt(user, roles2);
     }
 
     public Map<String, Object> newJWT(UserModel userModel){
-        PanacheQuery<UserModel> userByEmail = userRepository.find("email", userModel.getEmail());
-        if(Objects.isNull(userByEmail.firstResult())){
+        UserModel user = getUserByEmail(userModel.getEmail());
+        if(Objects.isNull(user)){
             throw new ObjectNotFoundException("User not found");
         }
 
-        Set<String> roles2 = userByEmail.firstResult().getRoles();
-        return securityUtils.encryptJwt(userByEmail, roles2);
+        Set<String> roles2 = user.getRoles();
+        return securityUtils.encryptJwt(user, roles2);
     }
 
 
@@ -115,7 +129,7 @@ public class UserService {
               userMapper.updateUser(user,userModel);
               userRepository.persist(userModel);
         }catch (RuntimeException e){
-            throw new ObjectNotFoundException("Error deleting user");
+            throw new ObjectNotFoundException("Error updating user");
         }
 
     }
@@ -186,30 +200,38 @@ public class UserService {
 
     @Transactional
     public String validateToken(String verificationToken) {
-        PanacheQuery<VerificationTokenModel> token = tokenRepository.find("token", verificationToken);
-       if(token.stream().findFirst().isEmpty()){
+
+        VerificationTokenModel token = tokenRepository.find("token", verificationToken).firstResult();
+
+
+       if(Objects.isNull(token)){
            return "invalid";
        }
+        UserModel user = token.getUser();
 
-       if(token.firstResult().getCheckedTimes() > 4){
+       if(token.getCheckedTimes() > 4){
+           token.setCheckedTimes(0);
+           token.setTimeLimit(getTokenTimeoutTime());
+           tokenRepository.persistAndFlush(token);
 
-           return "abuse";
+          return "abuse";
+       }
+        Calendar calendar = Calendar.getInstance();
+
+       if(Objects.nonNull(token.getTimeLimit()) && ((token.getTimeLimit().getTime() - calendar.getTime().getTime()) >= 0)) {
+               return "timeout";
        }
 
-
-
-        UserModel user = token.firstResult().getUser();
-        Calendar calendar = Calendar.getInstance();
-        if((token.firstResult().getExpirationTime().getTime() - calendar.getTime().getTime()) <= 0){
-
-            int times = token.firstResult().getCheckedTimes() + 1;
-            token.firstResult().setCheckedTimes(times);
-            tokenRepository.persistAndFlush(token.firstResult());
+        if((token.getExpirationTime().getTime() - calendar.getTime().getTime()) <= 0){
+            int times = token.getCheckedTimes() + 1;
+            token.setCheckedTimes(times);
+            tokenRepository.persistAndFlush(token);
             return  "expired";
         }
+
         user.setChecked(true);
         userRepository.persist(user);
-        tokenRepository.delete(token.firstResult());
+        tokenRepository.delete(token);
         return "valid";
     }
 
@@ -221,5 +243,12 @@ public class UserService {
         verificationToken.setExpirationTime(verificationTokenTime.getTokenExpirationTime());
         tokenRepository.persist(verificationToken);
         return verificationToken;
+    }
+
+    public  Date getTokenTimeoutTime() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(new Date().getTime());
+        calendar.add(Calendar.MINUTE, EXPIRATION_TIMEOUT);
+        return new Date(calendar.getTime().getTime());
     }
 }

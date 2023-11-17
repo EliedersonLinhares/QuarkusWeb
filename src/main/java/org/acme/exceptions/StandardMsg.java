@@ -11,5 +11,6 @@ public class StandardMsg {
     private Long timestamp;
     private Integer status;
     private String msg;
+    private String link;
 
 }

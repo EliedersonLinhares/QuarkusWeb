@@ -34,6 +34,7 @@ public class StartData {
             adminUser.setUsername(username);
             adminUser.setEmail(mail);
             adminUser.setPassword(BCrypt.withDefaults().hashToString(12,password.toCharArray()));
+            adminUser.setChecked(true);
             Set<String> roleUser = new HashSet<>();
             roleUser.add("admin");
             roleUser.add("user");

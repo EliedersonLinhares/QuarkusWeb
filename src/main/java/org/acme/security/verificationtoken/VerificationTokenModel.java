@@ -21,6 +21,7 @@ public class VerificationTokenModel {
     private String token;
     private Date expirationTime;
     private Integer checkedTimes;
+    private Date timeLimit;
 
     private static final int EXPIRATION_TIME = 1;
 
