@@ -10,9 +10,6 @@ import org.acme.user.UserModel;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
 import java.time.Duration;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -100,7 +97,7 @@ public class SecurityUtils {
 
         String token = Jwt.upn(user.toString())
                 .groups(roles2)
-                .expiresIn(Duration.ofMinutes(1))
+                .expiresIn(Duration.ofMinutes(30))
                 .sign();
 
         Map<String, Object> response = new HashMap<>();
@@ -109,6 +106,7 @@ public class SecurityUtils {
         return response;
     }
 
+    /**
     public String getDateTimeInCookieFormat() {
         OffsetDateTime oneHourFromNow
                 = OffsetDateTime.now(ZoneOffset.UTC)
@@ -116,4 +114,5 @@ public class SecurityUtils {
         return DateTimeFormatter.RFC_1123_DATE_TIME
                 .format(oneHourFromNow);
     }
+     **/
 }

@@ -26,6 +26,7 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 
 @Path("/api/user")
@@ -68,7 +69,7 @@ public class UserController {
     @Operation(description = "Login user and generate a JWT token and store on cookie")
     public Response loginByEmail(@RequestBody LoginDto loginDto){
 
-      Map<String,Object> response =  userService.authenticate( userMapper.toLoginDto(loginDto));
+      Map<String,Object> response =  userService.authenticate( loginDto);
 
 
         var cookie = Cookie.cookie("jwt", response.get("token").toString())
@@ -82,10 +83,6 @@ public class UserController {
         return Response.ok()
                 .header(HttpHeaders.SET_COOKIE.toString(), cookie.encode())
                 .build();
-
-
-     // String cookieExpires = securityUtils.getDateTimeInCookieFormat();
-       // return Response.ok(response.get("user")).header("Set-Cookie", "jwt="+response.get("token")+ ";Expires="+cookieExpires+"; HttpOnly=true ").build();
     }
 
 
@@ -95,7 +92,13 @@ public class UserController {
     public Response logout(){
 
         refreshTokenService.deleteToken();
-        return Response.ok().header("Set-Cookie", "jwt=;Expires=;").build();
+        var cookie = Cookie.cookie("jwt", "")
+                .setPath("/api")
+                ;
+
+        return Response.ok()
+                .header(HttpHeaders.SET_COOKIE.toString(), cookie.encode())
+                .build();
     }
 
 
@@ -108,18 +111,17 @@ public class UserController {
             @QueryParam("page") @DefaultValue("0") int page,
             @QueryParam("sort")@DefaultValue("id") String sort,
             @QueryParam("order")@DefaultValue("Ascending") String order,
-            //@QueryParam("firstname") String firstName,
-            @QueryParam("username") String username){
-/**
-        if(Stream.of(firstName,lastName).allMatch(Objects::nonNull)){
-            return  Response.ok( userService.findByfirstNameAndlastName(sort,order,page,size,firstName,lastName)
+            @QueryParam("username") String username,
+            @QueryParam("email") String email){
+
+        if(Stream.of(username,email).allMatch(Objects::nonNull)){
+            return  Response.ok( userService.findByUsernameAndEmail(sort,order,page,size,username,email)
             ).build();
         }
-        if(Objects.nonNull(firstName)){
-            return  Response.ok( userService.findByFirstName(sort,order,page,size,firstName)
+        if(Objects.nonNull(email)){
+            return  Response.ok( userService.findByEmail(sort,order,page,size,email)
        ).build();
         }
- **/
         if(Objects.nonNull(username)){
             return  Response.ok( userService.findByUsername(sort,order,page,size,username)
         ).build();
@@ -171,7 +173,6 @@ public class UserController {
 
     }
 
-
     @GET
     @Path("/resend-verificationtoken")
     @PermitAll
@@ -180,15 +181,12 @@ public class UserController {
         resendVerificationTokenEmail(applicationURL(request), verificationToken);
 
         return responseBase.toResponse(Response.Status.OK.getStatusCode(),"New link send to your email, please ,confirm for activate your account","");
-
     }
 
     private void resendVerificationTokenEmail(String applicationUrl, VerificationTokenModel verificationToken) {
         String url = applicationUrl + "/user/verifyEmail?token=" + verificationToken.getToken();
         log.info("Url example: {}", url);
     }
-
-
 
     @GET
     @Path("/userinformation")
@@ -254,9 +252,7 @@ public class UserController {
     public Response refreshToken(){
         String id = securityUtils.getIdfromDecodedCookie();
         UserModel userModel = userService.getUserById(Long.parseLong(id));
-
         Map<String,Object> response =  userService.newJWT(userModel);
-      //  String cookieExpires = securityUtils.getDateTimeInCookieFormat();
 
         var cookie = Cookie.cookie("jwt", response.get("token").toString())
                 .setSameSite(CookieSameSite.STRICT)
@@ -269,7 +265,7 @@ public class UserController {
         return Response.ok()
                 .header(HttpHeaders.SET_COOKIE.toString(), cookie.encode())
                 .build();
-      // return Response.ok("Token refresh successfully").header("Set-Cookie", "jwt="+response.get("token")+ ";Expires="+cookieExpires+"; HttpOnly=true ").build();
+
     }
 
 }

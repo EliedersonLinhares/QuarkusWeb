@@ -8,7 +8,9 @@ public record UpdateUserDto(
         Long id,
         @NotBlank(message = "Campo nome é obrigatorio")
         @Length(min = 2, max = 120, message = "O campo nome deve ter entre 2 e 120 caracteres")
-        String username
+        String username,
+
+         boolean isenabled
 
 ) {
 }

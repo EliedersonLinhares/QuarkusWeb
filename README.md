@@ -70,5 +70,5 @@ this user can be changed in application.properties
 
 ### Future Development
 
-1. [ ] Email verification for register
+1. [X] verification for register
 2. [ ] Email user for password change

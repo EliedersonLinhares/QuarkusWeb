@@ -39,15 +39,11 @@ public class UserService {
 
     @Transactional
     public void save2User(UserDto user) {
-        verifyEmailForLogin(user);
-        try {
-          UserModel userModel = new UserModel();
+        verifyEmailForRegister(user);
 
+            UserModel userModel = new UserModel();
             userMapper.setPasswordAndRole(user,userModel);
             userRepository.persistAndFlush(userMapper.toUserModel(user));
-        }catch (RuntimeException e) {
-            throw new ObjectNotFoundException("Error saving user");
-        }
 
     }
 
@@ -55,23 +51,25 @@ public class UserService {
 
        return userRepository.find("email", email).firstResult();
 
+
+
     }
 
-    private void verifyEmailForLogin(UserDto user) {
+    private void verifyEmailForRegister(UserDto user) {
+
         if(Objects.nonNull(getUserByEmail(user.email()))){
             throw new ObjectNotFoundException("Email already in use");
         }
     }
 
     @Transactional
-    public Map<String, Object> authenticate(UserModel userModel) {
-
-        UserModel user = getUserByEmail(userModel.getEmail());
-
+    public Map<String, Object> authenticate(LoginDto loginDto) {
+        UserModel user = getUserByEmail(loginDto.email());
 
         if(Objects.isNull(user)){
             throw new ObjectNotFoundException("User not found");
         }
+
         if(!user.isChecked()){
             throw new ObjectNotFoundException("Account not checked, verify your email");
         }
@@ -80,28 +78,28 @@ public class UserService {
         }
 
         if(!BCrypt.verifyer()
-                .verify(userModel.getPassword().toCharArray(),
+                .verify(loginDto.password().toCharArray(),
                 user.getPassword()).verified){
 
             throw new ObjectNotFoundException("Credentials invalid");
         }
 
 
-        refreshTokenService.createRefreshToken(userModel.getEmail());
+        refreshTokenService.createRefreshToken(loginDto.email());
 
 
         Set<String> roles2 = user.getRoles();
         return securityUtils.encryptJwt(user, roles2);
+
     }
 
     public Map<String, Object> newJWT(UserModel userModel){
-        UserModel user = getUserByEmail(userModel.getEmail());
-        if(Objects.isNull(user)){
-            throw new ObjectNotFoundException("User not found");
-        }
+            UserModel user = getUserByEmail(userModel.getEmail());
 
-        Set<String> roles2 = user.getRoles();
-        return securityUtils.encryptJwt(user, roles2);
+
+            Set<String> roles2 = user.getRoles();
+            return securityUtils.encryptJwt(user, roles2);
+
     }
 
 
@@ -168,43 +166,43 @@ public class UserService {
                 sortOrder(sort, order),
                 Parameters.with("username", "%" + username.toLowerCase() + "%")), page, size);
     }
-/**
-    public Object findBylastName(String sort, String order, int page, int size, String lastName) {
+
+    public Object findByEmail(String sort, String order, int page, int size, String email) {
         return getPaginatedResponse(userRepository.find(
-                "lower(lastName) like :lastName",
+                "lower(email) like :email",
                 sortOrder(sort, order),
-                Parameters.with("lastName", "%" + lastName.toLowerCase() + "%")), page, size);
+                Parameters.with("email", "%" + email.toLowerCase() + "%")), page, size);
     }
 
-    public Object findByfirstNameAndlastName(String sort, String order, int page, int size, String firstName,
-            String lastName) {
+    public Object findByUsernameAndEmail(String sort, String order, int page, int size, String username,
+            String email) {
         return getPaginatedResponse(userRepository.find(
-                "lower(firstName) like :firstName and lower(lastName) like :lastName",
+                "lower(username) like :username and lower(email) like :email",
                 sortOrder(sort, order),
-                Parameters.with("firstName", "%" + firstName.toLowerCase() + "%")
-                        .and("lastName", "%" + lastName.toLowerCase() + "%")),
+                Parameters.with("username", "%" + username.toLowerCase() + "%")
+                        .and("email", "%" + email.toLowerCase() + "%")),
                 page, size);
     }
-**/
+
     private Sort sortOrder(String sort, String order) {
         return Sort.by(sort).direction(Sort.Direction.valueOf(order));
     }
 
 
-
+@Transactional
     public void saveUserVerificationToken(UserModel user, String token) {
         int times = 1;
-    var verificationToken  = new VerificationTokenModel(token,user,times);
+      var verificationToken  = new VerificationTokenModel(token,user,times);
      tokenRepository.persist(verificationToken);
     }
 
     @Transactional
     public String validateToken(String verificationToken) {
 
-        VerificationTokenModel token = tokenRepository.find("token", verificationToken).firstResult();
+        VerificationTokenModel token = getVerificationToken(verificationToken);
 
 
-       if(Objects.isNull(token)){
+        if(Objects.isNull(token)){
            return "invalid";
        }
         UserModel user = token.getUser();
@@ -236,8 +234,23 @@ public class UserService {
     }
 
     @Transactional
+    public void saveToken(VerificationTokenModel token){
+        tokenRepository.persist(token);
+    }
+    @Transactional
+    public void deleteToken(VerificationTokenModel token){
+        tokenRepository.delete(token);
+    }
+    public VerificationTokenModel getVerificationToken(String verificationToken) {
+        return tokenRepository.find("token", verificationToken).firstResult();
+    }
+    public VerificationTokenModel getVerificationTokenByUser(UserModel userModel) {
+        return tokenRepository.find("user", userModel).firstResult();
+    }
+
+    @Transactional
     public VerificationTokenModel generateNewVerificationToken(String oldToken) {
-        VerificationTokenModel verificationToken = tokenRepository.find("token", oldToken).firstResult();
+        VerificationTokenModel verificationToken = getVerificationToken(oldToken);
         var verificationTokenTime = new VerificationTokenModel();
         verificationToken.setToken(UUID.randomUUID().toString());
         verificationToken.setExpirationTime(verificationTokenTime.getTokenExpirationTime());

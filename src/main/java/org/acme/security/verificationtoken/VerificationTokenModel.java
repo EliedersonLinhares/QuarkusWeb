@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 import org.acme.user.UserModel;
 
 import java.util.Calendar;
@@ -11,6 +12,7 @@ import java.util.Date;
 
 @Getter
 @Setter
+@ToString
 @Entity(name = "VerificationToken")
 @NoArgsConstructor
 public class VerificationTokenModel {
