@@ -29,6 +29,7 @@ public class UserService {
     private final VerificationTokenRepository tokenRepository;
 
     private static final int EXPIRATION_TIMEOUT = 4;
+   static final String UPDATE_ERROR = "Error updating user";
 
     public UserModel getUserById(long id){
 
@@ -95,11 +96,8 @@ public class UserService {
 
     public Map<String, Object> newJWT(UserModel userModel){
             UserModel user = getUserByEmail(userModel.getEmail());
-
-
             Set<String> roles2 = user.getRoles();
             return securityUtils.encryptJwt(user, roles2);
-
     }
 
 
@@ -127,7 +125,7 @@ public class UserService {
               userMapper.updateUser(user,userModel);
               userRepository.persist(userModel);
         }catch (RuntimeException e){
-            throw new ObjectNotFoundException("Error updating user");
+            throw new ObjectNotFoundException(UPDATE_ERROR);
         }
 
     }

@@ -21,25 +21,26 @@ public class RefreshTokenService {
     private final SecurityUtils securityUtils;
 
     public RefreshTokenModel findByToken(String token){
-        PanacheQuery<RefreshTokenModel> refreshtoken = refreshTokenRepository.find("token", token);
-        if(Objects.isNull(refreshtoken.firstResult())){
+        PanacheQuery<RefreshTokenModel> refreshToken = refreshTokenRepository.find("token", token);
+        if(Objects.isNull(refreshToken.firstResult())){
             throw new ObjectNotFoundException("Token não encontrado");
         }
-        return refreshtoken.firstResult();
+        return refreshToken.firstResult();
+
 
     }
     public RefreshTokenModel findByUser(UserModel userModel){
-        PanacheQuery<RefreshTokenModel> refreshtokenbyUser = refreshTokenRepository.find("userModel", userModel);
+        PanacheQuery<RefreshTokenModel> refreshTokenByUser = refreshTokenRepository.find("userModel", userModel);
 
-        if(Objects.isNull(refreshtokenbyUser.firstResult())){
+        if(Objects.isNull(refreshTokenByUser.firstResult())){
             throw new ObjectNotFoundException("Token não encontrado");
         }
-        return refreshtokenbyUser.firstResult();
+        return refreshTokenByUser.firstResult();
     }
     public RefreshTokenModel findByUserNonNull(UserModel userModel){
-        PanacheQuery<RefreshTokenModel> refreshtokenbyUser = refreshTokenRepository.find("userModel", userModel);
+        PanacheQuery<RefreshTokenModel> refreshTokenByUser = refreshTokenRepository.find("userModel", userModel);
 
-        return refreshtokenbyUser.firstResult();
+        return refreshTokenByUser.firstResult();
     }
 
     @Transactional

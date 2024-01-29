@@ -5,12 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import org.acme.exceptions.ObjectNotFoundException;
 import org.acme.security.verificationtoken.VerificationTokenModel;
-import org.acme.user.LoginDto;
-import org.acme.user.UserMapper;
-import org.acme.user.UserModel;
-import org.acme.user.UserService;
+import org.acme.user.*;
 import org.acme.utils.RegistrationCompleteEvent;
 import org.junit.jupiter.api.*;
 
@@ -30,6 +28,9 @@ class UserServiceTest {
 
     @Inject
     UserService userService;
+
+    @Inject
+    UserRepository userRepository;
 
     @Inject
     RegistrationCompleteEvent event;
@@ -251,14 +252,44 @@ class UserServiceTest {
 
 
         //when
-       userService.update2User(userMapper.toUpdateUserDto(userEdit), 1L);
-        userModel = userService.getUserById(1L);
+       userService.update2User(userMapper.toUpdateUserDto(userEdit), 2L);
+        userModel = userService.getUserById(2L);
+        System.out.println((userModel.toString()));
        //then
         assertTrue(userModel.getUsername().contains("Marcia2"));
 
     }
-
     @Order(9)
+    @DisplayName("Update User Error")
+    @Test
+    void updateUserError() {
+        //given
+        UserModel userEdit = new UserModel();
+        userEdit.setUsername("Marcia2");
+        userEdit.setEnabled(false);
+
+        //when
+        ObjectNotFoundException exception = assertThrows(ObjectNotFoundException.class,
+                () ->userService.update2User(userMapper.toUpdateUserDto(userEdit), 7L));
+        String expectedMessage = "Error updating user";
+        String actualMessage = exception.getMessage();
+        System.out.println(actualMessage);
+        //then
+        assertTrue(actualMessage.contains(expectedMessage));
+    }
+    @Order(10)
+    @DisplayName("Update User Role")
+    @Test
+    void updateUserRole() {
+
+    }
+    @Order(11)
+    @DisplayName("Update User Password")
+    @Test
+    void updateUserPassword() {
+    }
+
+    @Order(12)
     @DisplayName("Delete USer")
     @Test
     void deleteUserTest() {
@@ -275,8 +306,23 @@ class UserServiceTest {
         assertTrue(actualMessage.contains(expectedMessage));
 
     }
+    @Order(13)
+    @DisplayName("Delete Error")
+    @Test
+    void deleteUserError() {
 
-    @Order(10)
+        //when
+        ObjectNotFoundException exception = assertThrows(ObjectNotFoundException.class,
+                () ->  userService.deleteUser(7L));
+        String expectedMessage = "Error deleting user";
+        String actualMessage = exception.getMessage();
+
+        //then
+        assertTrue(actualMessage.contains(expectedMessage));
+
+    }
+
+    @Order(14)
     @DisplayName("Get User by id not found")
     @Test
     void getUserByIdThrowErrorTest() {
@@ -291,7 +337,7 @@ class UserServiceTest {
     }
 
 
-    @Order(11)
+    @Order(15)
     @DisplayName("Confirm user verification")
     @Test
     void ConfirmUserVerification(){
@@ -309,7 +355,7 @@ class UserServiceTest {
        //Then
        assertTrue(result.contains(expectedMessage));
     }
-    @Order(12)
+    @Order(16)
     @DisplayName("Confirm user verification error: token invalid")
     @Test
     void ConfirmUserVerificationInvalid(){
@@ -324,7 +370,7 @@ class UserServiceTest {
         //Then
         assertTrue(result.contains(expectedMessage));
     }
-    @Order(13)
+    @Order(17)
     @DisplayName("Confirm user verification error: multiple tries")
     @Test
     void ConfirmUserVerificationManyTries(){
@@ -352,7 +398,7 @@ class UserServiceTest {
         assertTrue(result.contains(expectedMessage));
     }
 
-    @Order(14)
+    @Order(18)
     @DisplayName("Confirm user verification error: expired")
     @Test
     void ConfirmUserVerificationExpired(){
@@ -387,7 +433,7 @@ class UserServiceTest {
         //Then
         assertTrue(result.contains(expectedMessage));
     }
-    @Order(15)
+    @Order(19)
     @DisplayName("Confirm user verification error: time limit for many tries exceeded")
     @Test
     void ConfirmUserVerificationTimeLimit(){
@@ -422,7 +468,7 @@ class UserServiceTest {
         //Then
         assertTrue(result.contains(expectedMessage));
     }
-    @Order(16)
+    @Order(20)
     @DisplayName("Authenticate user without check")
     @Test
     void AuthenticateUserWithoutCheck() {
@@ -438,7 +484,7 @@ class UserServiceTest {
         assertTrue(actualMessage.contains(expectedMessage));
     }
 
-    @Order(17)
+    @Order(21)
     @DisplayName("Authenticate User")
     @Test
     void AuthenticateUserSuccess(){
@@ -471,40 +517,73 @@ class UserServiceTest {
 
     }
 
-    @Order(18)
+    @Order(22)
+    @Transactional
     @DisplayName("Authenticate user disabled")
     @Test
     void AuthenticateUserDisabled() {
-
+        //Create new User
         UserModel userModel4 = new UserModel();
         userModel4.setUsername("Felipe");
         userModel4.setEmail("felipe.azevedo@mail.com");
         userModel4.setPassword("123456");
         userModel4.setEnabled(false);
-        userService.save2User(userMapper.toUserDto(userModel4));
+        userRepository.persistAndFlush(userModel4);
 
-        //given
+        //Register
         UserModel user = userService.getUserByEmail("felipe.azevedo@mail.com");
         VerificationTokenModel verificationToken2 = userService.getVerificationTokenByUser(user);
         if(Objects.nonNull(verificationToken2)){
             userService.deleteToken(verificationToken2);//delete previous token
         }
 
+        //Check user
         event.sendVerificationToken(user.getEmail(), "http://localhost:8080");
         VerificationTokenModel verificationToken = userService.getVerificationTokenByUser(user);
-
-        //When
         String result = userService.validateToken(verificationToken.getToken());
 
 
+        //Login
         LoginDto loginDto = new LoginDto("felipe.azevedo@mail.com","123456");
 
-        //when
+        //Result
         ObjectNotFoundException exception = assertThrows(ObjectNotFoundException.class,
                 () -> userService.authenticate(loginDto));
         String expectedMessage = "Disabled account, contact the Admin";
         String actualMessage = exception.getMessage();
-   System.out.println(actualMessage);
+        System.out.println(actualMessage);
+
+        assertTrue(result.contains("valid"));
+        assertTrue(actualMessage.contains(expectedMessage));
+    }
+
+    @Order(23)
+    @DisplayName("Authenticate user with wrong password")
+    @Test
+    void AuthenticateUseWrongPassord() {
+        LoginDto loginDto = new LoginDto("roberto.nascimento@mail.com","12345");
+
+        //when
+        ObjectNotFoundException exception = assertThrows(ObjectNotFoundException.class,
+                () -> userService.authenticate(loginDto));
+        String expectedMessage = "Credentials invalid";
+        String actualMessage = exception.getMessage();
+        System.out.println(actualMessage);
+        //then
+        assertTrue(actualMessage.contains(expectedMessage));
+    }
+    @Order(24)
+    @DisplayName("Authenticate user not found")
+    @Test
+    void AuthenticateUseNotFound() {
+        LoginDto loginDto = new LoginDto("arnaldo.cezar@mail.com","12345");
+
+        //when
+        ObjectNotFoundException exception = assertThrows(ObjectNotFoundException.class,
+                () -> userService.authenticate(loginDto));
+        String expectedMessage = "User not found";
+        String actualMessage = exception.getMessage();
+        System.out.println(actualMessage);
         //then
         assertTrue(actualMessage.contains(expectedMessage));
     }

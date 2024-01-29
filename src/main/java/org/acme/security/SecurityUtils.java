@@ -24,20 +24,6 @@ public class SecurityUtils {
     @Inject
     SecurityIdentity identity;
 
-
-  public void getInformationFromIdentity(){
-     String principal = identity.getPrincipal().getName();
-     String firstName = principal.substring(principal.indexOf("firstName",principal.indexOf("=")) +12,principal.indexOf(",",principal.indexOf(",")));
-       System.out.println(" ----- "+ firstName);
-     //  String userid = principal.substring(principal.indexOf("id",principal.indexOf("=")) +3,principal.indexOf(",",principal.indexOf(",")+1));
-      String userid = principal.substring(principal.indexOf("id",principal.indexOf("=")) +3,principal.indexOf("}",principal.indexOf("}")));
-       System.out.println(" ----- "+ userid);
-    //   String email = principal.substring(principal.indexOf("email",principal.indexOf("=")) +6,principal.indexOf("}",principal.indexOf("}")));
-      // System.out.println(" ----- "+ email);
-
-      System.out.println(" -----" + principal);
-    }
-
     public Map<String, Object> userfromIdentity() {
         String principal = identity.getPrincipal().getName();
         String firstName = principal.substring(principal.indexOf("firstName",principal.indexOf("=")) +12,principal.indexOf(",",principal.indexOf(",")));
@@ -55,7 +41,6 @@ public class SecurityUtils {
           HttpServerRequest request = ResteasyProviderFactory.getInstance().getContextData(HttpServerRequest.class);
           String[] chunks = request.getCookie("jwt").getValue().split("\\.");
           Base64.Decoder decoder = Base64.getUrlDecoder();
-          //System.out.println("-------" + decoder);
           String payload = new String(decoder.decode(chunks[1]));
 
           return payload.substring(payload.indexOf("id", payload.indexOf("=")) + 3, payload.indexOf("}", payload.indexOf("}")));
@@ -105,14 +90,4 @@ public class SecurityUtils {
         response.put("token", token);
         return response;
     }
-
-    /**
-    public String getDateTimeInCookieFormat() {
-        OffsetDateTime oneHourFromNow
-                = OffsetDateTime.now(ZoneOffset.UTC)
-                .plus(Duration.ofDays(365));
-        return DateTimeFormatter.RFC_1123_DATE_TIME
-                .format(oneHourFromNow);
-    }
-     **/
 }
